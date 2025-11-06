@@ -33,3 +33,48 @@ df_ch_infrastructure = df_health[df_health["Region"]== "Schweiz"]
 st.header("Infrastructure Development in Swiss Hospitals in 2010-2023")
 df_infrastructure_ch_indexed = df_ch_infrastructure.set_index("Jahr")
 st.bar_chart(df_infrastructure_ch_indexed["Infrastructure_Total"])
+
+
+###generating a line plot for the examinations per device
+column_devices = ["ANGIOGRAPHIE_Geräte", "CT_SCANNER_Geräte", "DIALYSE_Geräte", "GAMMA_CAMERA_Geräte", "LINEARBESCHLEUNIGER_Geräte",	"LITHOTRIPTOR_Geräte", "MRI_Geräte", "PET_SCANNER_Geräte"]
+df_health["Total Devices"] = df_health[column_devices].sum(axis=1)
+
+column_examination = ["ANGIOGRAPHIE_Untersuchungen", "CT_SCANNER_Untersuchungen", "DIALYSE_Untersuchungen", "GAMMA_CAMERA_Untersuchungen", "LINEARBESCHLEUNIGER_Untersuchungen", "LITHOTRIPTOR_Untersuchungen", "MRI_Untersuchungen", "PET_SCANNER_Untersuchungen"]
+df_health["Total Examinations"] = df_health[column_examination].sum(axis=1)
+
+df_health["Examinations per Device"] = (df_health["Total Examinations"] / df_health["Total Devices"])
+
+
+import matplotlib.pyplot as plt
+
+st.header("Examinations per Device – Switzerland (2010–2023)")
+
+df_ch_ExPerDe = df_health[df_health['Region'] == 'Schweiz']
+
+
+###for this line chart we used the help of ai but made sure to understand what hes doing
+
+st.header("Examinations per Device – Trend by Regions")
+
+# Verfügbare Regionen (inkl. Schweiz)
+regionen = sorted(df_health['Region'].dropna().unique().tolist())
+
+# Auswahl-UI (Standard: Schweiz)
+selection = st.multiselect("Choose region(S):", regionen, default=["Schweiz"])
+
+if selection:
+    fig, ax = plt.subplots(figsize=(9, 6))
+
+    for r in selection:
+        s = (df_health[df_health['Region'] == r]
+            .sort_values('Jahr'))
+        ax.plot(s['Jahr'], s['Examinations per Device'], marker='o', label=r)
+
+    ax.set_xlabel("Jahr")
+    ax.set_ylabel("Examinations per Device")
+    ax.set_title("Examinations per Device - Trend by Regions")
+    ax.grid(True)
+    ax.legend(title="Region")
+    st.pyplot(fig)
+else:
+    st.info("Please choose at least one region.")
