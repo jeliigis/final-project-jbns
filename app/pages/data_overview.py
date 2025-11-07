@@ -3,35 +3,42 @@ import pandas as pd
 import streamlit as st
 from pathlib import Path
 
+st.set_page_config(
+    page_title="Swiss Hospital Dashboard",
+    page_icon="🏥",
+    layout="centered"
+)
 
 HERE = Path(__file__).resolve().parent          # = app/pages
 DATA_PATH = HERE.parent / "data" / "df_health.xlsx"  # = app/data/df_health.xlsx
 
 df_health = pd.read_excel(DATA_PATH, na_values=["x"])
+st.title("Swiss Hospital Data over the last decade")
 st.dataframe(df_health)
 
 
 # ROOT = Path(__file__).parent
 # df_health = pd.read_excel(ROOT / "data" / "df_health.xlsx")
 
-df_health.info()
-df_health["Kost_Total"] = df_health["KostAmbA"] + df_health["KostStatA"]
-df_health.head()
 
 # generating a histogram for the total cost in switzerland
+
+df_health.info()
+df_health["Cost_Total"] = df_health["KostAmbA"] + df_health["KostStatA"]
+df_health.head()
 df_ch_cost = df_health[df_health["Region"] == "Schweiz"]
-st.header("Kostenentwicklung der Akutbehandlung in Schweizer Spitälern (2010-2023)")
+st.header("Cost development of acute treatment in Swiss hospitals (2010–2023)")
 df_cost_ch_indexed = df_ch_cost.set_index('Jahr')
-st.bar_chart(df_cost_ch_indexed['Kost_Total'])
+st.bar_chart(df_cost_ch_indexed['Cost_Total'])
 
 # generating a bar plot for the total staff trend
-df_health["Personal_Total"] = df_health[['MedTechPersonal_Anz_GrVe', 'MedTechPersonal_Anz_ZeVe', 'MedTechPersonal_Anz_AllgKr', 'MedTheraPersonal_Anz_GrVe',	'MedTheraPersonal_Anz_ZeVe',
-                                         'MedTheraPersonal_Anz_AllgKr', 'Pflegepersonal_Anz_GrVe', 'Pflegepersonal_Anz_ZeVe', 'Pflegepersonal_Anz_AllgKr',	'Ärzteschaft_Anz_GrVe',	'Ärzteschaft_Anz_ZeVe',	'Ärzteschaft_Anz_AllgKr']].sum(axis=1)
+df_health["Staff_Total"] = df_health[['MedTechPersonal_Anz_GrVe', 'MedTechPersonal_Anz_ZeVe', 'MedTechPersonal_Anz_AllgKr', 'MedTheraPersonal_Anz_GrVe',	'MedTheraPersonal_Anz_ZeVe',
+                                      'MedTheraPersonal_Anz_AllgKr', 'Pflegepersonal_Anz_GrVe', 'Pflegepersonal_Anz_ZeVe', 'Pflegepersonal_Anz_AllgKr',	'Ärzteschaft_Anz_GrVe',	'Ärzteschaft_Anz_ZeVe',	'Ärzteschaft_Anz_AllgKr']].sum(axis=1)
 
 df_ch_staff = df_health[df_health["Region"] == "Schweiz"]
-st.header("Personalentwicklung in Schweizer Spitälern (2010-2023) ")
+st.header("Staff development of acute treatment in Swiss hospitals (2010-2023)")
 df_staff_ch_indexed = df_ch_staff.set_index("Jahr")
-st.bar_chart(df_staff_ch_indexed["Personal_Total"])
+st.bar_chart(df_staff_ch_indexed["Staff_Total"])
 
 
 # generating a bar plot for the total infrastructure trend over the years
