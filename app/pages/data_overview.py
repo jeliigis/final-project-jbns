@@ -14,7 +14,7 @@ DATA_PATH = HERE.parent / "data" / "df_health.xlsx"  # = app/data/df_health.xlsx
 
 df_health = pd.read_excel(DATA_PATH, na_values=["x"])
 st.title("Swiss Hospital Data over the last decade")
-st.dataframe(df_health)
+# st.dataframe(df_health)
 
 
 # ROOT = Path(__file__).parent
@@ -45,6 +45,7 @@ st.bar_chart(df_staff_ch_indexed["Staff_Total"])
 df_health["Infrastructure_Total"] = df_health[['ANGIOGRAPHIE_Geräte', 'CT_SCANNER_Geräte', 'DIALYSE_Geräte', 'GAMMA_CAMERA_Geräte',	'LINEARBESCHLEUNIGER_Geräte', 'LITHOTRIPTOR_Geräte',	'MRI_Geräte', 'PET_SCANNER_Geräte', 'ANGIOGRAPHIE_Untersuchungen',
                                                'CT_SCANNER_Untersuchungen', 'DIALYSE_Untersuchungen', 'GAMMA_CAMERA_Untersuchungen',	'LINEARBESCHLEUNIGER_Untersuchungen', 'LITHOTRIPTOR_Untersuchungen', 'MRI_Untersuchungen', 'PET_SCANNER_Untersuchungen']].sum(axis=1)
 df_ch_infrastructure = df_health[df_health["Region"] == "Schweiz"]
+df_ch_infrastructure = df_ch_infrastructure[df_ch_infrastructure["Jahr"] >= 2013]
 st.header("Infrastructure Development in Swiss Hospitals in 2010-2023")
 df_infrastructure_ch_indexed = df_ch_infrastructure.set_index("Jahr")
 st.bar_chart(df_infrastructure_ch_indexed["Infrastructure_Total"])
@@ -144,3 +145,19 @@ else:
 # ax.set_title("Development of Beds vs Nurses (Switzerland)")
 # ax.legend()
 # st.pyplot(fig)
+
+# renaming all the variables and standardise them in english
+
+# df_health = df_health.rename(columns={
+#    "Jahr": "Year",
+#    "Region": "Region",
+#    "KostAmbA": "Cost_AcuteCare_Amb",
+#    "KostStatA": "Cost_AcuteCare_Stat",
+#   "Anzahl_Spitaeler_GrVe": "Amount_Hospitals_Basic",
+#    "Anzahl_Spitaeler_ZeVe": "Amount_Hospitals_Central",
+#    "Anzahl_Spitaeler_AllgKr": "Amount_Hospitals_General",
+#    "Betten_Total_GrVe": "Beds_Total_Basic",
+#    "Betten_Total_ZeVe": "Beds_Total_Central",
+#    "Betten_Total_AllgKr": "Beds_Total_General",
+#    ""
+# })
