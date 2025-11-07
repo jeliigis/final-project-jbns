@@ -14,9 +14,6 @@ st.dataframe(df_health)
 # ROOT = Path(__file__).parent
 # df_health = pd.read_excel(ROOT / "data" / "df_health.xlsx")
 
-# df_health = pd.read_excel("data/df_health.xlsx", na_values=["X"])
-st.dataframe(df_health)
-
 df_health.info()
 df_health["Kost_Total"] = df_health["KostAmbA"] + df_health["KostStatA"]
 df_health.head()
@@ -59,8 +56,6 @@ df_health["Examinations per Device"] = (
     df_health["Total Examinations"] / df_health["Total Devices"])
 
 
-st.header("Examinations per Device – Switzerland (2010–2023)")
-
 df_ch_ExPerDe = df_health[df_health['Region'] == 'Schweiz']
 
 
@@ -90,3 +85,55 @@ if selection:
     st.pyplot(fig)
 else:
     st.info("Please choose at least one region.")
+
+# generating a bar plot for the bed/nurse development over the last decade
+# new key-number
+st.header("Beds per Nurse - Trend by Regions")
+charge_nurse = "Beds per Nurse"
+df_health[charge_nurse] = df_health["Betten_Total_AllgKr"] / \
+    df_health["Pflegepersonal_Anz_AllgKr"]
+
+if selection:
+    fig, ax = plt.subplots(figsize=(9, 6))
+    for r in selection:
+        s = df_health[df_health["Region"] == r].sort_values("Jahr")
+        ax.plot(s["Jahr"], s[charge_nurse], marker="o", label=r)
+    ax.set_xlabel("Jahr")
+    ax.set_ylabel(charge_nurse)
+    ax.set_title("Beds per Nurse – Trend by Regions")
+    ax.grid(True)
+    ax.legend(title="Region")
+    st.pyplot(fig)
+else:
+    st.info("Please choose at least one region.")
+
+# generating a bar plot for the bed/doc development over the last decade
+# new key humber
+
+st.header("Beds per Doctor - Trend by Regions")
+charge_doc = "Beds per Doctor"
+df_health[charge_doc] = df_health["Betten_Total_AllgKr"] / \
+    df_health["Ärzteschaft_Anz_AllgKr"]
+
+if selection:
+    fig, ax = plt.subplots(figsize=(9, 6))
+    for r in selection:
+        s = df_health[df_health["Region"] == r].sort_values("Jahr")
+        ax.plot(s["Jahr"], s[charge_doc], marker="o", label=r)
+    ax.set_xlabel("Jahr")
+    ax.set_ylabel(charge_doc)
+    ax.set_title("Beds per Docs – Trend by Regions")
+    ax.grid(True)
+    ax.legend(title="Region")
+    st.pyplot(fig)
+else:
+    st.info("Please choose at least one region.")
+
+# fig, ax = plt.subplots(figsize=(9, 6))
+# s = df_health[df_health["Region"] == "Schweiz"].sort_values("Jahr")
+# ax.plot(s["Jahr"], s["Betten_Total_AllgKr"], marker="o", label="Total Beds")
+# ax.plot(s["Jahr"], s["Pflegepersonal_Anz_AllgKr"],
+#        marker="o", label="Total Nurses")
+# ax.set_title("Development of Beds vs Nurses (Switzerland)")
+# ax.legend()
+# st.pyplot(fig)
