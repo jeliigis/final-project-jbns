@@ -24,40 +24,41 @@ st.title("Swiss Hospital Data over the last decade")
 # generating a histogram for the total cost in switzerland
 
 df_health.info()
-df_health["Cost_Total"] = df_health["KostAmbA"] + df_health["KostStatA"]
+df_health["Cost_Total"] = df_health["Cost_AcuteCare_Amb"] + \
+    df_health["Cost_AcuteCare_Stat"]
 df_health.head()
 df_ch_cost = df_health[df_health["Region"] == "Schweiz"]
 st.header("Cost development of acute treatment in Swiss hospitals (2010–2023)")
-df_cost_ch_indexed = df_ch_cost.set_index('Jahr')
+df_cost_ch_indexed = df_ch_cost.set_index('Year')
 st.bar_chart(df_cost_ch_indexed['Cost_Total'])
 
 # generating a bar plot for the total staff trend
-df_health["Staff_Total"] = df_health[['MedTechPersonal_Anz_GrVe', 'MedTechPersonal_Anz_ZeVe', 'MedTechPersonal_Anz_AllgKr', 'MedTheraPersonal_Anz_GrVe',	'MedTheraPersonal_Anz_ZeVe',
-                                      'MedTheraPersonal_Anz_AllgKr', 'Pflegepersonal_Anz_GrVe', 'Pflegepersonal_Anz_ZeVe', 'Pflegepersonal_Anz_AllgKr',	'Ärzteschaft_Anz_GrVe',	'Ärzteschaft_Anz_ZeVe',	'Ärzteschaft_Anz_AllgKr']].sum(axis=1)
+df_health["Staff_Total"] = df_health[['MedTec_Amount_Basic', 'MedTec_Amount_Central', 'MedTec_Amount_General', 'MedThe_Amount_Basic', 'MedThe_Amount_Central',
+                                      'MedThe_Amount_General', 'Nurses_Amount_Basic', 'Nurses_Amount_Central', 'Nurses_Amount_General',	'Doctors_Amount_Basic',	'Doctors_Amount_Central', 'Doctors_Amount_General']].sum(axis=1)
 
 df_ch_staff = df_health[df_health["Region"] == "Schweiz"]
 st.header("Staff development of acute treatment in Swiss hospitals (2010-2023)")
-df_staff_ch_indexed = df_ch_staff.set_index("Jahr")
+df_staff_ch_indexed = df_ch_staff.set_index('Year')
 st.bar_chart(df_staff_ch_indexed["Staff_Total"])
 
 
 # generating a bar plot for the total infrastructure trend over the years
-df_health["Infrastructure_Total"] = df_health[['ANGIOGRAPHIE_Geräte', 'CT_SCANNER_Geräte', 'DIALYSE_Geräte', 'GAMMA_CAMERA_Geräte',	'LINEARBESCHLEUNIGER_Geräte', 'LITHOTRIPTOR_Geräte',	'MRI_Geräte', 'PET_SCANNER_Geräte', 'ANGIOGRAPHIE_Untersuchungen',
-                                               'CT_SCANNER_Untersuchungen', 'DIALYSE_Untersuchungen', 'GAMMA_CAMERA_Untersuchungen',	'LINEARBESCHLEUNIGER_Untersuchungen', 'LITHOTRIPTOR_Untersuchungen', 'MRI_Untersuchungen', 'PET_SCANNER_Untersuchungen']].sum(axis=1)
+df_health["Infrastructure_Total"] = df_health[["Angiographie_Device", "CT_Scanner_Device", "Dialyse_Device", "Gamma_Camera_Device",
+                                               "Linear_Accelerator_Device",	"Lithotriptor_Device", "MRI_Device", "Pet_Scanner_Device"]].sum(axis=1)
 df_ch_infrastructure = df_health[df_health["Region"] == "Schweiz"]
-df_ch_infrastructure = df_ch_infrastructure[df_ch_infrastructure["Jahr"] >= 2013]
+df_ch_infrastructure = df_ch_infrastructure[df_ch_infrastructure['Year'] >= 2013]
 st.header("Infrastructure Development in Swiss Hospitals in 2010-2023")
-df_infrastructure_ch_indexed = df_ch_infrastructure.set_index("Jahr")
+df_infrastructure_ch_indexed = df_ch_infrastructure.set_index('Year')
 st.bar_chart(df_infrastructure_ch_indexed["Infrastructure_Total"])
 
 
 # generating a line plot for the examinations per device
-column_devices = ["ANGIOGRAPHIE_Geräte", "CT_SCANNER_Geräte", "DIALYSE_Geräte", "GAMMA_CAMERA_Geräte",
-                  "LINEARBESCHLEUNIGER_Geräte",	"LITHOTRIPTOR_Geräte", "MRI_Geräte", "PET_SCANNER_Geräte"]
+column_devices = ["Angiographie_Device", "CT_Scanner_Device", "Dialyse_Device", "Gamma_Camera_Device",
+                  "Linear_Accelerator_Device",	"Lithotriptor_Device", "MRI_Device", "Pet_Scanner_Device"]
 df_health["Total Devices"] = df_health[column_devices].sum(axis=1)
 
-column_examination = ["ANGIOGRAPHIE_Untersuchungen", "CT_SCANNER_Untersuchungen", "DIALYSE_Untersuchungen", "GAMMA_CAMERA_Untersuchungen",
-                      "LINEARBESCHLEUNIGER_Untersuchungen", "LITHOTRIPTOR_Untersuchungen", "MRI_Untersuchungen", "PET_SCANNER_Untersuchungen"]
+column_examination = ["Angiographie_Examination", "CT_Scanner_Examination", "Dialyse_Examination", "Gamma_Camera_Examination",
+                      "Linear_Accelerator_Examination", "Lithotriptor_Examination", "MRI_Examination", "Pet_Scanner_Examination"]
 df_health["Total Examinations"] = df_health[column_examination].sum(axis=1)
 
 df_health["Examinations per Device"] = (
@@ -82,10 +83,10 @@ if selection:
 
     for r in selection:
         s = (df_health[df_health['Region'] == r]
-             .sort_values('Jahr'))
-        ax.plot(s['Jahr'], s['Examinations per Device'], marker='o', label=r)
+             .sort_values('Year'))
+        ax.plot(s['Year'], s['Examinations per Device'], marker='o', label=r)
 
-    ax.set_xlabel("Jahr")
+    ax.set_xlabel('Year')
     ax.set_ylabel("Examinations per Device")
     ax.set_title("Examinations per Device - Trend by Regions")
     ax.grid(True)
@@ -98,15 +99,15 @@ else:
 # new key-number
 st.header("Beds per Nurse - Trend by Regions")
 charge_nurse = "Beds per Nurse"
-df_health[charge_nurse] = df_health["Betten_Total_AllgKr"] / \
-    df_health["Pflegepersonal_Anz_AllgKr"]
+df_health[charge_nurse] = df_health["Beds_Total_General"] / \
+    df_health["Nurses_Amount_General"]
 
 if selection:
     fig, ax = plt.subplots(figsize=(9, 6))
     for r in selection:
-        s = df_health[df_health["Region"] == r].sort_values("Jahr")
-        ax.plot(s["Jahr"], s[charge_nurse], marker="o", label=r)
-    ax.set_xlabel("Jahr")
+        s = df_health[df_health["Region"] == r].sort_values("Year")
+        ax.plot(s['Year'], s[charge_nurse], marker="o", label=r)
+    ax.set_xlabel('Year')
     ax.set_ylabel(charge_nurse)
     ax.set_title("Beds per Nurse – Trend by Regions")
     ax.grid(True)
@@ -120,15 +121,15 @@ else:
 
 st.header("Beds per Doctor - Trend by Regions")
 charge_doc = "Beds per Doctor"
-df_health[charge_doc] = df_health["Betten_Total_AllgKr"] / \
-    df_health["Ärzteschaft_Anz_AllgKr"]
+df_health[charge_doc] = df_health["Beds_Total_General"] / \
+    df_health["Doctors_Amount_General"]
 
 if selection:
     fig, ax = plt.subplots(figsize=(9, 6))
     for r in selection:
-        s = df_health[df_health["Region"] == r].sort_values("Jahr")
-        ax.plot(s["Jahr"], s[charge_doc], marker="o", label=r)
-    ax.set_xlabel("Jahr")
+        s = df_health[df_health["Region"] == r].sort_values("Year")
+        ax.plot(s["Year"], s[charge_doc], marker="o", label=r)
+    ax.set_xlabel("Year")
     ax.set_ylabel(charge_doc)
     ax.set_title("Beds per Docs – Trend by Regions")
     ax.grid(True)
@@ -138,26 +139,10 @@ else:
     st.info("Please choose at least one region.")
 
 # fig, ax = plt.subplots(figsize=(9, 6))
-# s = df_health[df_health["Region"] == "Schweiz"].sort_values("Jahr")
-# ax.plot(s["Jahr"], s["Betten_Total_AllgKr"], marker="o", label="Total Beds")
-# ax.plot(s["Jahr"], s["Pflegepersonal_Anz_AllgKr"],
+# s = df_health[df_health["Region"] == "Schweiz"].sort_values("Year")
+# ax.plot(s["Year"], s["Betten_Total_AllgKr"], marker="o", label="Total Beds")
+# ax.plot(s["Year"], s["Pflegepersonal_Anz_AllgKr"],
 #        marker="o", label="Total Nurses")
 # ax.set_title("Development of Beds vs Nurses (Switzerland)")
 # ax.legend()
 # st.pyplot(fig)
-
-# renaming all the variables and standardise them in english
-
-# df_health = df_health.rename(columns={
-#    "Jahr": "Year",
-#    "Region": "Region",
-#    "KostAmbA": "Cost_AcuteCare_Amb",
-#    "KostStatA": "Cost_AcuteCare_Stat",
-#   "Anzahl_Spitaeler_GrVe": "Amount_Hospitals_Basic",
-#    "Anzahl_Spitaeler_ZeVe": "Amount_Hospitals_Central",
-#    "Anzahl_Spitaeler_AllgKr": "Amount_Hospitals_General",
-#    "Betten_Total_GrVe": "Beds_Total_Basic",
-#    "Betten_Total_ZeVe": "Beds_Total_Central",
-#    "Betten_Total_AllgKr": "Beds_Total_General",
-#    ""
-# })
