@@ -15,7 +15,8 @@ DATA_PATH = HERE.parent / "data" / "df_health.xlsx"  # = app/data/df_health.xlsx
 df_health = pd.read_excel(DATA_PATH, na_values=["x"])
 st.title("Swiss Hospital Data")
 st.subheader("Data Overview")
-tab1, tab2 = st.tabs(["Development Statistics", "Occupancy Statistics"])
+tab1, tab2, tab3 = st.tabs(
+    ["Development Statistics", "Occupancy Statistics", "Regression"])
 # st.dataframe(df_health)
 
 
@@ -64,6 +65,12 @@ with tab1:
     st.subheader("Infrastructure development in Swiss Hospitals in 2013-2023")
     df_infrastructure_ch_indexed = df_ch_infrastructure.set_index('Year')
     st.bar_chart(df_infrastructure_ch_indexed["Infrastructure_Total"])
+    st.caption("_x-axis = Year, y-axis = Number of Medical Devices_")
+    st.caption("List of relevant Devices: Angiographie, CT Scanner, Dialyse, Gamma Camera, Linear Accelerator,Lithotriptor, MRI,Pet_Scanner")
+    st.write("This graphic presents the development of numbers of available medical devices in acute treatment in Swiss hospitals between 2010 and 2023."
+             "The lates number of total medical devices in Switzerland in 2023 has increased by + 20% since 2013. There were comparatively large increases in 2016 to 2017 and 2017 to 2018. "
+             "The highest acquisition rate is evident in the available data for 2020. While 23 new devices were purchased in the previous year, the corresponding figure for 2020 was 85. "
+             "This can be linked to the global pandemic. A year later, the number of new devices purchased fell to a low of 14. ")
 
 with tab2:
     st.subheader("Occupancy Statistics")
@@ -153,11 +160,12 @@ with tab2:
     else:
         st.info("Please choose at least one region.")
 
-# fig, ax = plt.subplots(figsize=(9, 6))
-# s = df_health[df_health["Region"] == "Schweiz"].sort_values("Year")
-# ax.plot(s["Year"], s["Betten_Total_AllgKr"], marker="o", label="Total Beds")
-# ax.plot(s["Year"], s["Pflegepersonal_Anz_AllgKr"],
-#        marker="o", label="Total Nurses")
-# ax.set_title("Development of Beds vs Nurses (Switzerland)")
-# ax.legend()
-# st.pyplot(fig)
+    fig, ax = plt.subplots(figsize=(9, 6))
+    s = df_health[df_health["Region"] == "Schweiz"].sort_values("Year")
+    ax.plot(s["Year"], s["Beds_Total_General"],
+            marker="o", label="Total Beds")
+    ax.plot(s["Year"], s["Nurses_Amount_General"],
+            marker="o", label="Total Nurses")
+    ax.set_title("Development of Beds vs Nurses (Switzerland)")
+    ax.legend()
+    st.pyplot(fig)
