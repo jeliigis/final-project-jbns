@@ -186,3 +186,40 @@ with tab2:
     ax.set_title("Development of Beds vs Nurses (Switzerland)")
     ax.legend()
     st.pyplot(fig)
+
+
+###doing a regression
+with tab3: ###install scikit: pip3 install scikit-learn
+    from sklearn.linear_model import LinearRegression
+    df_health_reg = df_health.dropna(subset=["Cost_Total", "Staff_Total", "Beds_Total_General"])
+
+    df_health_reg["cost_per_bed"] = df_health_reg["Cost_Total"] / df_health_reg["Beds_Total_General"]
+    df_health_reg["nurses_per_bed"] = df_health_reg["Nurses_Amount_General"] / df_health_reg["Beds_Total_General"]
+    
+    st.title("Linear Regressions")
+    st.header("Linear Regression: Cost per Bed on Beds per Nurse")
+
+    X = df_health_reg[["nurses_per_bed"]]
+    y = df_health_reg["cost_per_bed"]
+
+    df_health_reg = df_health_reg[df_health_reg["cost_per_bed"] != 0]
+
+    model = LinearRegression().fit(X, y)
+    df_health_reg["Regression"] = model.predict(X)
+
+    st.write(f"Intercept: {model.intercept_:.2f}") ###used AI for help
+    st.write(f"Slope: {model.coef_[0]:.2f}")
+    
+
+    plt.scatter(df_health_reg["nurses_per_bed"], df_health_reg["cost_per_bed"], label = "Data")
+    plt.plot(df_health_reg["nurses_per_bed"], df_health_reg["Regression"], label = "Regression")
+    plt.xlabel("Nurses per bed")
+    plt.ylabel("Cost per bed")
+    plt.legend()
+
+    plt.xlim(0, 4)
+    plt.ylim(0, 2_000_000)
+
+    st.pyplot(plt)
+
+    st.write(df_health_reg[["cost_per_bed", "nurses_per_bed"]].head(112))
