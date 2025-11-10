@@ -25,6 +25,15 @@ tab1, tab2, tab3 = st.tabs(
 
 with tab1:
     st.header("Development Statistics")
+
+    # generating a bar plot for the total of hospitals trend over the years
+    df_ch_hospitals = df_health[df_health["Region"] == "Schweiz"]
+    st. subheader("Hospital development in Swiss Hospitals in 2010 - 2023")
+    df_hospitals_ch_indexed = df_ch_hospitals.set_index('Year')
+    st.bar_chart(df_hospitals_ch_indexed["Amount_Hospitals_General"])
+    st.caption("_x-axis = Year, y-axis = number of hospitals_")
+    st.write("")
+
 # generating a histogram for the total cost in switzerland
 
     df_health.info()
@@ -71,6 +80,14 @@ with tab1:
              "The lates number of total medical devices in Switzerland in 2023 has increased by + 20% since 2013. There were comparatively large increases in 2016 to 2017 and 2017 to 2018. "
              "The highest acquisition rate is evident in the available data for 2020. While 23 new devices were purchased in the previous year, the corresponding figure for 2020 was 85. "
              "This can be linked to the global pandemic. A year later, the number of new devices purchased fell to a low of 14. ")
+    # generating a bar plot for the total of hospital beds trend over the years
+    df_ch_beds = df_health[df_health["Region"] == "Schweiz"]
+    st. subheader(
+        "Hospital Beds development in Swiss Hospitals in 2010 - 2023")
+    df_beds_ch_indexed = df_ch_beds.set_index('Year')
+    st.bar_chart(df_beds_ch_indexed["Beds_Total_General"])
+    st.caption("_x-axis = Year, y-axis = number of hospital beds_")
+
 
 with tab2:
     st.subheader("Occupancy Statistics")
