@@ -32,7 +32,9 @@ with tab1:
     df_hospitals_ch_indexed = df_ch_hospitals.set_index('Year')
     st.bar_chart(df_hospitals_ch_indexed["Amount_Hospitals_General"])
     st.caption("_x-axis = Year, y-axis = number of hospitals_")
-    st.write("")
+    st.write("This graphic illustrates the development of the number of hospitals in Switzerland from 2010 to 2023. "
+             "The data show a gradual decline in the total number of hospitals over the observed period, suggesting a trend toward consolidation or centralization within the Swiss healthcare system. "
+             "While the decrease is not abrupt, it reflects a steady structural adjustment in hospital availability nationwide. Regarding the year 2023, there has been a decrease of -19.8% since the year 2010.")
 
 # generating a histogram for the total cost in switzerland
 
@@ -87,6 +89,8 @@ with tab1:
     df_beds_ch_indexed = df_ch_beds.set_index('Year')
     st.bar_chart(df_beds_ch_indexed["Beds_Total_General"])
     st.caption("_x-axis = Year, y-axis = number of hospital beds_")
+    st.write("The graphic shows the development of total beds in Swiss hospitals between 2010 and 2023. "
+             "The data demonstrate that Switzerland has reduced its total number of beds in acute treatment hospitals by -12.4% over the last 13 years.")
 
 
 with tab2:
@@ -188,14 +192,17 @@ with tab2:
     st.pyplot(fig)
 
 
-###doing a regression
-with tab3: ###install scikit: pip3 install scikit-learn
+# doing a regression
+with tab3:  # install scikit: pip3 install scikit-learn
     from sklearn.linear_model import LinearRegression
-    df_health_reg = df_health.dropna(subset=["Cost_Total", "Staff_Total", "Beds_Total_General"])
+    df_health_reg = df_health.dropna(
+        subset=["Cost_Total", "Staff_Total", "Beds_Total_General"])
 
-    df_health_reg["cost_per_bed"] = df_health_reg["Cost_Total"] / df_health_reg["Beds_Total_General"]
-    df_health_reg["nurses_per_bed"] = df_health_reg["Nurses_Amount_General"] / df_health_reg["Beds_Total_General"]
-    
+    df_health_reg["cost_per_bed"] = df_health_reg["Cost_Total"] / \
+        df_health_reg["Beds_Total_General"]
+    df_health_reg["nurses_per_bed"] = df_health_reg["Nurses_Amount_General"] / \
+        df_health_reg["Beds_Total_General"]
+
     st.title("Linear Regressions")
     st.header("Linear Regression: Cost per Bed on Beds per Nurse")
 
@@ -207,12 +214,13 @@ with tab3: ###install scikit: pip3 install scikit-learn
     model = LinearRegression().fit(X, y)
     df_health_reg["Regression"] = model.predict(X)
 
-    st.write(f"Intercept: {model.intercept_:.2f}") ###used AI for help
+    st.write(f"Intercept: {model.intercept_:.2f}")  # used AI for help
     st.write(f"Slope: {model.coef_[0]:.2f}")
-    
 
-    plt.scatter(df_health_reg["nurses_per_bed"], df_health_reg["cost_per_bed"], label = "Data")
-    plt.plot(df_health_reg["nurses_per_bed"], df_health_reg["Regression"], label = "Regression")
+    plt.scatter(df_health_reg["nurses_per_bed"],
+                df_health_reg["cost_per_bed"], label="Data")
+    plt.plot(df_health_reg["nurses_per_bed"],
+             df_health_reg["Regression"], label="Regression")
     plt.xlabel("Nurses per bed")
     plt.ylabel("Cost per bed")
     plt.legend()
