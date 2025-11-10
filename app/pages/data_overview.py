@@ -161,3 +161,8 @@ else:
 #    "Betten_Total_AllgKr": "Beds_Total_General",
 #    ""
 # })
+
+
+st.header("Relationship between Examinations per Device and Beds per Nurse")
+st.scatter_chart(df_health, x="Examinations per Device", y="Beds per Nurse")
+st.line_chart(pd.DataFrame({"Examinations_per_Device": x_sorted, "Regression": y_fit}))
