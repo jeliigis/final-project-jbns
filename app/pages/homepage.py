@@ -10,5 +10,4 @@ st.markdown("This dashboard provides an analytical view of the Swiss hospital la
 st.set_page_config(
     page_title="Swiss Hospital Dashboard",
     page_icon="🏥",  # ← das ist dein favicon!
-    layout="wide"
-)
+    layout="wide")
