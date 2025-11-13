@@ -11,3 +11,10 @@ st.set_page_config(
     page_title="Swiss Hospital Dashboard",
     page_icon="🏥",  # ← das ist dein favicon!
     layout="wide")
+
+# first attempt of heatmapping: 10.11.25
+
+# for col in ["Examinations_per_Device", "Beds_per_Nurse", "Beds_per_Doctor"]:
+# df[col + "_norm"] = (
+# (df[col] - df[col].min()) / (df[col].max() - df[col].min())
+# ) * 100  # normiert auf 0–100
