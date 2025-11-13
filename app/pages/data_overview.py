@@ -92,6 +92,18 @@ with tab1:
     st.write("The graphic shows the development of total beds in Swiss hospitals between 2010 and 2023. "
              "The data demonstrate that Switzerland has reduced its total number of beds in acute treatment hospitals by -12.4% over the last 13 years.")
 
+    fig, ax = plt.subplots(figsize=(9, 6))
+    s = df_health[df_health["Region"] == "Schweiz"].sort_values("Year")
+    ax.plot(s["Year"], s["Beds_Total_General"],
+            marker="o", label="Total Beds")
+    ax.plot(s["Year"], s["Nurses_Amount_General"],
+            marker="o", label="Total Nurses")
+    ax.set_title("Development of Beds vs Nurses (Switzerland)")
+    ax.legend()
+    st.pyplot(fig)
+    st.caption("_x-axis = Year, y-axis= Total Beds and Nurses_")
+    st.write("While nurses numbers have steadily increased in recent years, the number of beds requiring care has fallen in parallel. "
+             "This development has eased the burden on nursing staff, although it should be noted that individual treatments may have become more intensive as a result. ")
 
 with tab2:
     st.subheader("Occupancy Statistics")
@@ -180,16 +192,6 @@ with tab2:
         st.pyplot(fig)
     else:
         st.info("Please choose at least one region.")
-
-    fig, ax = plt.subplots(figsize=(9, 6))
-    s = df_health[df_health["Region"] == "Schweiz"].sort_values("Year")
-    ax.plot(s["Year"], s["Beds_Total_General"],
-            marker="o", label="Total Beds")
-    ax.plot(s["Year"], s["Nurses_Amount_General"],
-            marker="o", label="Total Nurses")
-    ax.set_title("Development of Beds vs Nurses (Switzerland)")
-    ax.legend()
-    st.pyplot(fig)
 
 
 # doing a regression
