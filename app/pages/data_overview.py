@@ -195,41 +195,174 @@ with tab2:
 
 
 # doing a regression
-with tab3:  # install scikit: pip3 install scikit-learn
+
+with tab3:
     from sklearn.linear_model import LinearRegression
-    df_health_reg = df_health.dropna(
-        subset=["Cost_Total", "Staff_Total", "Beds_Total_General"])
+    import numpy as np
+    import pandas as pd
+    import matplotlib.pyplot as plt
+
+    # --- Vorbereitung
+    req = ["Cost_Total", "Staff_Total", "Beds_Total_General", "Bed_Occupancy_General",
+           "Total Devices", "Total Examinations", "Nurses_Amount_General"]
+    df_health_reg = df_health.dropna(subset=req).copy()
 
     df_health_reg["cost_per_bed"] = df_health_reg["Cost_Total"] / \
         df_health_reg["Beds_Total_General"]
     df_health_reg["nurses_per_bed"] = df_health_reg["Nurses_Amount_General"] / \
         df_health_reg["Beds_Total_General"]
+    df_health_reg["examinations_per_device"] = df_health_reg["Total Examinations"] / \
+        df_health_reg["Total Devices"]
 
-    st.title("Linear Regressions")
-    st.header("Linear Regression: Cost per Bed on Beds per Nurse")
-
-    X = df_health_reg[["nurses_per_bed"]]
-    y = df_health_reg["cost_per_bed"]
-
+    # nur sinnvolle Zeilen behalten
+    df_health_reg = df_health_reg.replace([np.inf, -np.inf], np.nan).dropna()
     df_health_reg = df_health_reg[df_health_reg["cost_per_bed"] != 0]
 
-    model = LinearRegression().fit(X, y)
-    df_health_reg["Regression"] = model.predict(X)
+    st.title("Linear Regressions")
 
-    st.write(f"Intercept: {model.intercept_:.2f}")  # used AI for help
-    st.write(f"Slope: {model.coef_[0]:.2f}")
+    # --- 1) cost_per_bed ~ nurses_per_bed
+    st.header("Linear Regression: Cost per Bed on Beds per Nurse")
+    X1 = df_health_reg[["nurses_per_bed"]]   # 2D
+    y1 = df_health_reg["cost_per_bed"]       # 1D
 
+    model1 = LinearRegression().fit(X1, y1)
+    df_health_reg["Regression_nurses"] = model1.predict(X1)
+
+    st.write(f"Intercept: {model1.intercept_:.2f}")
+    st.write(f"Slope: {model1.coef_[0]:.2f}")
+
+    plt.figure()
     plt.scatter(df_health_reg["nurses_per_bed"],
                 df_health_reg["cost_per_bed"], label="Data")
     plt.plot(df_health_reg["nurses_per_bed"],
-             df_health_reg["Regression"], label="Regression")
+             df_health_reg["Regression_nurses"], label="Regression", color="magenta", linewidth=2)
     plt.xlabel("Nurses per bed")
     plt.ylabel("Cost per bed")
     plt.legend()
-
     plt.xlim(0, 4)
     plt.ylim(0, 2_000_000)
-
     st.pyplot(plt)
 
-    st.write(df_health_reg[["cost_per_bed", "nurses_per_bed"]].head(112))
+    # --- 2) cost_per_bed ~ Bed_Occupancy_General
+    st.header("Linear Regression: Cost per Bed on Bed Occupancy Score")
+
+    # WICHTIG: X als 2D-DataFrame
+    X2 = df_health_reg[["Bed_Occupancy_General"]]
+    y2 = df_health_reg["cost_per_bed"]
+
+    model2 = LinearRegression().fit(X2, y2)
+    df_health_reg["Regression_occupancy"] = model2.predict(X2)
+
+    st.write(f"Intercept: {model2.intercept_:.2f}")
+    st.write(f"Slope: {model2.coef_[0]:.2f}")
+
+    plt.figure()
+    plt.scatter(df_health_reg["Bed_Occupancy_General"],
+                df_health_reg["cost_per_bed"], label="Data")
+    plt.plot(df_health_reg["Bed_Occupancy_General"],
+             df_health_reg["Regression_occupancy"], label="Regression", color="magenta", linewidth=2)
+    plt.xlabel("Bed Occupancy Rate")
+    plt.ylabel("Cost per bed")
+    plt.legend()
+    # Passe die Achse an deine Skala an (0–1 oder 0–100)
+    plt.xlim(df_health_reg["Bed_Occupancy_General"].min()*0.95,
+             df_health_reg["Bed_Occupancy_General"].max()*1.05)
+    plt.ylim(0, 2_000_000)
+    st.pyplot(plt)
+
+    st.write(df_health_reg[["cost_per_bed",
+             "nurses_per_bed", "Bed_Occupancy_General"]].head(15))
+
+    # --- 3) cost per bed ~ examinations per device
+    st.header("Linear Regression: Cost per Bed on Examinations per Device")
+    X3 = df_health_reg[["examinations_per_device"]]
+    y3 = df_health_reg["cost_per_bed"]
+
+    model3 = LinearRegression(). fit(X3, y3)
+    df_health_reg["Regression_examinations"] = model3.predict(X3)
+
+    st.write(f"Intercept: {model3.intercept_:.2f}")
+    st.write(f"Slope: {model3.coef_[0]:.2f}")
+
+    plt.figure()
+    plt.scatter(df_health_reg["examinations_per_device"],
+                df_health_reg["cost_per_bed"], label="Data")
+    plt.plot(df_health_reg["examinations_per_device"],
+             df_health_reg["Regression_examinations"], label="Regression", color="magenta", linewidth=2)
+    plt.xlabel("Examinations per Device")
+    plt.ylabel("Cost per bed")
+    plt.legend()
+    # Passe die Achse an deine Skala an (0–1 oder 0–100)
+    plt.xlim(df_health_reg["examinations_per_device"].min()*0.95,
+             df_health_reg["examinations_per_device"].max()*1.05)
+    plt.ylim(0, 2_000_000)
+    st.pyplot(plt)
+
+
+# with tab3:  # install scikit: pip3 install scikit-learn
+    # from sklearn.linear_model import LinearRegression
+    # df_health_reg = df_health.dropna(
+    #    subset=["Cost_Total", "Staff_Total", "Beds_Total_General", "Bed_Occupancy_General", "Total Devices", "Total Examinations"])
+
+    # df_health_reg["cost_per_bed"] = df_health_reg["Cost_Total"] / \
+    #   df_health_reg["Beds_Total_General"]
+    # df_health_reg["nurses_per_bed"] = df_health_reg["Nurses_Amount_General"] / \
+    #   df_health_reg["Beds_Total_General"]
+    # df_health_reg["examinations_per_device"] = df_health_reg["Total Examinations"] / \
+    #    df_health_reg["Total Devices"]
+
+    # st.title("Linear Regressions")
+    # st.header("Linear Regression: Cost per Bed on Beds per Nurse")
+    # x1 = df_health_reg[["nurses_per_bed"]]
+    # y1 = df_health_reg["cost_per_bed"]
+
+    # df_health_reg = df_health_reg[df_health_reg["cost_per_bed"] != 0]
+
+    # model1 = LinearRegression().fit(x1, y1)
+    # df_health_reg["Regression"] = model1.predict(x1)
+
+    # st.write(f"Intercept: {model1.intercept_:.2f}")  # used AI for help
+    # st.write(f"Slope: {model1.coef_[0]:.2f}")
+
+    # plt.scatter(df_health_reg["nurses_per_bed"],
+    # df_health_reg["cost_per_bed"], label="Data")
+    # plt.plot(df_health_reg["nurses_per_bed"],
+    # df_health_reg["Regression"], label="Regression")
+    # plt.xlabel("Nurses per bed")
+    # plt.ylabel("Cost per bed")
+    # plt.legend()
+
+    # plt.xlim(0, 4)
+    # plt.ylim(0, 2_000_000)
+
+    # st.pyplot(plt)
+
+    # st.write(df_health_reg[["cost_per_bed", "nurses_per_bed"]].head(112))
+
+    # st.header("Linear Regression: Cost per Bed on Bed Occupancy Score")
+
+    # x2 = df_health_reg["Bed_Occupancy_General"]
+    # y2 = df_health_reg["cost_per_bed"]
+
+    # df_health_reg = df_health_reg[df_health_reg["cost_per_bed"] != 0]
+
+    # model2 = LinearRegression(). fit(x2, y2)
+    # df_health_reg["Regression"] = model2.predict(x2)
+
+    # st.write(f"Intercept: {model2.intercept_:.2f}")  # used AI for help
+    # st.write(f"Slope: {model2.coef_[0]:.2f}")
+
+    # plt.scatter(df_health_reg["Bed_Occupancy_General"],
+    # df_health_reg["cost_per_bed"], label="Data")
+    # plt.plot(df_health_reg["Bed_Occupancy_General"],
+    # df_health_reg["Regression"], label="Regression")
+    # plt.xlabel("Bed Occupancy Rate")
+    # plt.ylabel("Cost per bed")
+    # plt.legend()
+
+    # plt.xlim(0, 4)
+    # plt.ylim(0, 2_000_000)
+
+    # st.pyplot(plt)
+
+    # st.write(df_health_reg[["cost_per_bed", "nurses_per_bed"]].head(112))
