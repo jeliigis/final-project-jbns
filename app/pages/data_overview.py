@@ -203,7 +203,7 @@ with tab3:
     import matplotlib.pyplot as plt
 
     # --- Vorbereitung
-    req = ["Cost_Total", "Staff_Total", "Beds_Total_General", "Bed_Occupancy_General",
+    req = ["Region", "Year", "Cost_Total", "Staff_Total", "Beds_Total_General", "Bed_Occupancy_General",
            "Total Devices", "Total Examinations", "Nurses_Amount_General"]
     df_health_reg = df_health.dropna(subset=req).copy()
 
@@ -214,7 +214,7 @@ with tab3:
     df_health_reg["examinations_per_device"] = df_health_reg["Total Examinations"] / \
         df_health_reg["Total Devices"]
 
-    # nur sinnvolle Zeilen behalten
+    # nur sinnvolle Zeilen behalten / with the help of AI
     df_health_reg = df_health_reg.replace([np.inf, -np.inf], np.nan).dropna()
     df_health_reg = df_health_reg[df_health_reg["cost_per_bed"] != 0]
 
@@ -239,8 +239,6 @@ with tab3:
     plt.xlabel("Nurses per bed")
     plt.ylabel("Cost per bed")
     plt.legend()
-    plt.xlim(0, 4)
-    plt.ylim(0, 2_000_000)
     st.pyplot(plt)
 
     # --- 2) cost_per_bed ~ Bed_Occupancy_General
@@ -366,3 +364,39 @@ with tab3:
     # st.pyplot(plt)
 
     # st.write(df_health_reg[["cost_per_bed", "nurses_per_bed"]].head(112))
+
+st.header("Two-Way Fixed Effects: Cost per Bed on Beds per Nurse (Region + Year)")
+
+# generate a new dataset were we have the demeaned data to have a bit more overview
+df_fe = df_health_reg.copy()
+
+# calculate the mean in general
+mean_nurses = df_fe["nurses_per_bed"].mean()
+mean_cost = df_fe["cost_per_bed"].mean()
+
+# demean year and regions / used a bit help of AI with .transform
+region_mean_nurses = df_fe.groupby("Region")["nurses_per_bed"].transform("mean")
+year_mean_nurses = df_fe.groupby("Year")["nurses_per_bed"].transform("mean")
+
+region_mean_cost = df_fe.groupby("Region")["cost_per_bed"].transform("mean")
+year_mean_cost = df_fe.groupby("Year")["cost_per_bed"].transform("mean")
+
+#generate the new datapoints by using double demeaning (thanks to ronak jain and intermediate econometrics)
+df_fe["nurses_dd"] = (df_fe["nurses_per_bed"] - region_mean_nurses - year_mean_nurses + mean_nurses)
+df_fe["cost_dd"] = (df_fe["cost_per_bed"] - region_mean_cost - year_mean_cost + mean_cost)
+
+#regress and plot as used to above
+X = df_fe[["nurses_dd"]]
+y = df_fe["cost_dd"]
+
+model_fe = LinearRegression().fit(X, y)
+df_fe["regline_dd"] = model_fe.predict(X)
+
+plt.figure()
+plt.scatter(df_fe["nurses_dd"], df_fe["cost_dd"], label="Data (within Region & Year)")
+plt.plot(df_fe["nurses_dd"], df_fe["regline_dd"], label="Two-Way FE Regression")
+plt.xlabel("Nurses per Bed (within Region & Year)")
+plt.ylabel("Cost per Bed (within Region & Year)")
+
+
+st.pyplot(plt)
