@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
+import numpy as np
 # content
 
 st.title("Switzerland's Hospital System: Between Performance and Bottleneck.")
@@ -25,39 +26,71 @@ st.subheader("Data Overview")
 
 # KPI Dashboard
 
-st.subheader("Key Figures November 2025")
 
-nov_row = df_sim[(df_sim["Year"] == 2025) & (
-    df_sim["Month"] == "November")].iloc[0]
+# verfügbare Jahre (sortiert)
+years = sorted(df_sim["Year"].unique())
+# Standard: letztes Jahr (also das aktuellste)
+default_year_index = len(years) - 1
+
+selected_year = st.selectbox(
+    "Select year",
+    years,
+    index=default_year_index)
+
+# verfügbare Monate für das ausgewählte Jahr
+month_options = df_sim[df_sim["Year"] == selected_year]["Month"].unique()
+
+selected_month = st.selectbox(
+    "Select month",
+    month_options)
+
+# Zeile für ausgewählte Kombination Jahr + Monat holen
+selected_row = df_sim[
+    (df_sim["Year"] == selected_year) &
+    (df_sim["Month"] == selected_month)].iloc[0]
 
 # KPI Calculation
+
+st.subheader(f"Key Figures {selected_month} {selected_year}")
 # Total Patients
-total_patients_nov = int(nov_row["Total Patient"])
+total_patients = int(selected_row["Total Patient"])
 
 # Total Staff
-total_staff_nov = int(
-    nov_row[["Nurses", "Doctors", "MedTech", "Cleaning"]].sum())
+total_staff = int(
+    selected_row[["Nurses", "Doctors", "MedTech", "Cleaning"]].sum())
 
 # Total Cost
-total_cost_nov = float(nov_row["Treatment Cost"])
+total_cost = float(selected_row["Treatment Cost"])
 
 # Average Treatment Cost
 
-avg_treat_cost_nov = round(total_cost_nov / total_patients_nov, 2)
+avg_treat_cost = round(total_cost / total_patients, 2)
 
-col1, col2, col3 = st.columns(3)
+
+def metric_chart(label: str, value):
+    """Creates a KPI metric box wrapped in a bordered container."""
+    with st.container(border=True):
+        st.metric(label=label, value=f"{value:,}")
+
+# Illustration
+
+
+col1, col2, col3 = st.columns((3, 3, 3), gap="medium")
 
 with col1:
-    st.metric(label="Total Patient November 2025",
-              value=f"{total_patients_nov:,}")
+    metric_chart(
+        f"Total Patient {selected_month} {selected_year}",
+        total_patients)
 
 with col2:
-    st.metric(label="Total Staff November 2025", value=f"{total_staff_nov:,}")
+    metric_chart(
+        f"Total Staff {selected_month} {selected_year}",
+        total_staff)
 
 with col3:
-    st.metric(
-        label="Avg. Treatment Cost per Patient (Nov 2025)",
-        value=f"{avg_treat_cost_nov:,}")
+    metric_chart(
+        f"Avg. Treatment Cost per Patient ({selected_month} {selected_year})",
+        avg_treat_cost)
 
 
 # Pie Diagram
@@ -80,6 +113,3 @@ with col3:
 # plt.tight_layout(pad=0)
 
 # st.pyplot(fig, clear_figure=True)
-
-
-# Spider Diagram
