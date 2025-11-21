@@ -229,177 +229,117 @@ with tab3:
     X1 = df_health_reg[["nurses_per_bed"]]   # 2D
     y1 = df_health_reg["cost_per_bedday"]       # 1D
 
-    model1 = LinearRegression().fit(X1, y1)
-    df_health_reg["Regression_nurses"] = model1.predict(X1)
+    model_1 = LinearRegression().fit(X1, y1)
+    df_health_reg["Regression_nurses"] = model_1.predict(X1)
 
-    st.write(f"Intercept: {model1.intercept_:.2f}")
-    st.write(f"Slope: {model1.coef_[0]:.2f}")
+    st.write(f"Intercept: {model_1.intercept_:.2f}")
+    st.write(f"Slope: {model_1.coef_[0]:.2f}")
 
     plt.figure()
     plt.scatter(df_health_reg["nurses_per_bed"],
                 df_health_reg["cost_per_bedday"], label="Data")
     plt.plot(df_health_reg["nurses_per_bed"],
-             df_health_reg["Regression_nurses"], label="Regression", color="magenta", linewidth=2)
+             df_health_reg["Regression_nurses"], label="Regression", color="magenta")
     plt.xlabel("Nurses per bed")
     plt.ylabel("Cost per bedday")
     plt.legend()
     st.pyplot(plt)
 
-    # --- 2) cost_per_bed ~ Bed_Occupancy_General
+    # --- 2) cost per beddays - nurses per bed (with two way FE)
+    st.header("Two-Way Fixed Effects: Cost per Bedday on Beds per Nurse (Region + Year)")
+
+    # generate a new dataset were we have the demeaned data to have a bit more overview
+    df_fe = df_health_reg.copy()
+
+    # calculate the mean in general
+    mean_nurses = df_fe["nurses_per_bed"].mean()
+    mean_cost = df_fe["cost_per_bedday"].mean()
+
+    # demean year and regions / used a bit help of AI with .transform
+    region_mean_nurses = df_fe.groupby("Region")["nurses_per_bed"].transform("mean")
+    year_mean_nurses = df_fe.groupby("Year")["nurses_per_bed"].transform("mean")
+
+    region_mean_cost = df_fe.groupby("Region")["cost_per_bedday"].transform("mean")
+    year_mean_cost = df_fe.groupby("Year")["cost_per_bedday"].transform("mean")
+
+    #generate the new datapoints by using double demeaning (thanks to ronak jain and intermediate econometrics)
+    df_fe["nurses_dd"] = (df_fe["nurses_per_bed"] - region_mean_nurses - year_mean_nurses + mean_nurses)
+    df_fe["cost_dd"] = (df_fe["cost_per_bedday"] - region_mean_cost - year_mean_cost + mean_cost)
+
+    #regress and plot as used to above
+    X2 = df_fe[["nurses_dd"]]
+    y2 = df_fe["cost_dd"]
+
+    model_fe_1 = LinearRegression().fit(X2, y2)
+    df_fe["regline_dd"] = model_fe_1.predict(X2)
+
+    plt.figure()
+    plt.scatter(df_fe["nurses_dd"], df_fe["cost_dd"], label="Data (within Region & Year)")
+    plt.plot(df_fe["nurses_dd"], df_fe["regline_dd"], label="Two-Way FE Regression", color = "magenta")
+    plt.xlabel("Nurses per Bed (within Region & Year)")
+    plt.ylabel("Cost per Bedday (within Region & Year)")
+    plt.legend()
+
+
+    st.pyplot(plt)
+
+    # --- 3) cost_per_bed ~ Bed_Occupancy_General
     st.header("Linear Regression: Cost per Bedday on Average occupied Beddays")
 
     # WICHTIG: X als 2D-DataFrame
-    X2 = df_health_reg[["Avg_Days_Occ"]]
-    y2 = df_health_reg["cost_per_bedday"]
+    X3 = df_health_reg[["Avg_Days_Occ"]]
+    y3 = df_health_reg["cost_per_bedday"]
 
-    model2 = LinearRegression().fit(X2, y2)
-    df_health_reg["Regression_occupancy"] = model2.predict(X2)
+    model_2 = LinearRegression().fit(X3, y3)
+    df_health_reg["Regression_occupancy"] = model_2.predict(X3)
 
-    st.write(f"Intercept: {model2.intercept_:.2f}")
-    st.write(f"Slope: {model2.coef_[0]:.2f}")
+    st.write(f"Intercept: {model_2.intercept_:.2f}")
+    st.write(f"Slope: {model_2.coef_[0]:.2f}")
 
     plt.figure()
     plt.scatter(df_health_reg["Avg_Days_Occ"],
                 df_health_reg["cost_per_bedday"], label="Data")
     plt.plot(df_health_reg["Avg_Days_Occ"],
-             df_health_reg["Regression_occupancy"], label="Regression", color="magenta", linewidth=2)
+             df_health_reg["Regression_occupancy"], label="Regression", color="magenta")
     plt.xlabel("Avg. Days Occ")
     plt.ylabel("Cost per bedday")
     plt.legend()
-    # Passe die Achse an deine Skala an (0–1 oder 0–100)
-    ###plt.xlim(df_health_reg["Bed_Occupancy_General"].min()*0.95,
-             ###df_health_reg["Bed_Occupancy_General"].max()*1.05)
-    ###plt.ylim(0, 2_000_000)
     st.pyplot(plt)
 
+    # --- 4) cost per beddays - nurses per bed (with two way FE)
+    st.header("Two-Way Fixed Effects: Cost per Bedday on Average occupied Beddays (Region + Year)")
 
+    # generate a new dataset were we have the demeaned data to have a bit more overview
+    df_fe_2 = df_health_reg.copy()
 
-    # --- 3) cost per bedday ~ examinations per device
-    st.header("Linear Regression: Cost per Bedday on Examinations per Device")
-    X3 = df_health_reg[["examinations_per_device"]]
-    y3 = df_health_reg["cost_per_bedday"]
+    # calculate the mean in general
+    mean_days_occ = df_fe_2["Avg_Days_Occ"].mean()
+    mean_cost = df_fe_2["cost_per_bedday"].mean()
 
-    model3 = LinearRegression(). fit(X3, y3)
-    df_health_reg["Regression_examinations"] = model3.predict(X3)
+    # demean year and regions / used a bit help of AI with .transform
+    region_mean_days_occ = df_fe_2.groupby("Region")["Avg_Days_Occ"].transform("mean")
+    year_mean_days_occ = df_fe_2.groupby("Year")["Avg_Days_Occ"].transform("mean")
 
-    st.write(f"Intercept: {model3.intercept_:.2f}")
-    st.write(f"Slope: {model3.coef_[0]:.2f}")
+    region_mean_cost = df_fe_2.groupby("Region")["cost_per_bedday"].transform("mean")
+    year_mean_cost = df_fe_2.groupby("Year")["cost_per_bedday"].transform("mean")
+
+    #generate the new datapoints by using double demeaning (thanks to ronak jain and intermediate econometrics)
+    df_fe_2["days_dd"] = (df_fe_2["Avg_Days_Occ"] - region_mean_days_occ - year_mean_days_occ + mean_days_occ)
+    df_fe_2["cost_dd"] = (df_fe_2["cost_per_bedday"] - region_mean_cost - year_mean_cost + mean_cost)
+
+    #regress and plot as used to above
+    X4 = df_fe_2[["days_dd"]]
+    y4 = df_fe_2["cost_dd"]
+
+    model_fe_2 = LinearRegression().fit(X4, y4)
+    df_fe_2["regline_dd"] = model_fe_2.predict(X4)
 
     plt.figure()
-    plt.scatter(df_health_reg["examinations_per_device"],
-                df_health_reg["cost_per_bedday"], label="Data")
-    plt.plot(df_health_reg["examinations_per_device"],
-             df_health_reg["Regression_examinations"], label="Regression", color="magenta", linewidth=2)
-    plt.xlabel("Examinations per Device")
-    plt.ylabel("Cost per bedday")
+    plt.scatter(df_fe_2["days_dd"], df_fe_2["cost_dd"], label="Data (within Region & Year)")
+    plt.plot(df_fe_2["days_dd"], df_fe_2["regline_dd"], label="Two-Way FE Regression", color = "magenta")
+    plt.xlabel("Avg. Beddays (within Region & Year)")
+    plt.ylabel("Cost per Bedday (within Region & Year)")
     plt.legend()
-    # Passe die Achse an deine Skala an (0–1 oder 0–100)
-    ##plt.xlim(df_health_reg["examinations_per_device"].min()*0.95,
-            ##df_health_reg["examinations_per_device"].max()*1.05)
-    ##plt.ylim(0, 2_000_000)
+
+
     st.pyplot(plt)
-
-
-# with tab3:  # install scikit: pip3 install scikit-learn
-    # from sklearn.linear_model import LinearRegression
-    # df_health_reg = df_health.dropna(
-    #    subset=["Cost_Total", "Staff_Total", "Beds_Total_General", "Bed_Occupancy_General", "Total Devices", "Total Examinations"])
-
-    # df_health_reg["cost_per_bed"] = df_health_reg["Cost_Total"] / \
-    #   df_health_reg["Beds_Total_General"]
-    # df_health_reg["nurses_per_bed"] = df_health_reg["Nurses_Amount_General"] / \
-    #   df_health_reg["Beds_Total_General"]
-    # df_health_reg["examinations_per_device"] = df_health_reg["Total Examinations"] / \
-    #    df_health_reg["Total Devices"]
-
-    # st.title("Linear Regressions")
-    # st.header("Linear Regression: Cost per Bed on Beds per Nurse")
-    # x1 = df_health_reg[["nurses_per_bed"]]
-    # y1 = df_health_reg["cost_per_bed"]
-
-    # df_health_reg = df_health_reg[df_health_reg["cost_per_bed"] != 0]
-
-    # model1 = LinearRegression().fit(x1, y1)
-    # df_health_reg["Regression"] = model1.predict(x1)
-
-    # st.write(f"Intercept: {model1.intercept_:.2f}")  # used AI for help
-    # st.write(f"Slope: {model1.coef_[0]:.2f}")
-
-    # plt.scatter(df_health_reg["nurses_per_bed"],
-    # df_health_reg["cost_per_bed"], label="Data")
-    # plt.plot(df_health_reg["nurses_per_bed"],
-    # df_health_reg["Regression"], label="Regression")
-    # plt.xlabel("Nurses per bed")
-    # plt.ylabel("Cost per bed")
-    # plt.legend()
-
-    # plt.xlim(0, 4)
-    # plt.ylim(0, 2_000_000)
-
-    # st.pyplot(plt)
-
-    # st.write(df_health_reg[["cost_per_bed", "nurses_per_bed"]].head(112))
-
-    # st.header("Linear Regression: Cost per Bed on Bed Occupancy Score")
-
-    # x2 = df_health_reg["Bed_Occupancy_General"]
-    # y2 = df_health_reg["cost_per_bed"]
-
-    # df_health_reg = df_health_reg[df_health_reg["cost_per_bed"] != 0]
-
-    # model2 = LinearRegression(). fit(x2, y2)
-    # df_health_reg["Regression"] = model2.predict(x2)
-
-    # st.write(f"Intercept: {model2.intercept_:.2f}")  # used AI for help
-    # st.write(f"Slope: {model2.coef_[0]:.2f}")
-
-    # plt.scatter(df_health_reg["Bed_Occupancy_General"],
-    # df_health_reg["cost_per_bed"], label="Data")
-    # plt.plot(df_health_reg["Bed_Occupancy_General"],
-    # df_health_reg["Regression"], label="Regression")
-    # plt.xlabel("Bed Occupancy Rate")
-    # plt.ylabel("Cost per bed")
-    # plt.legend()
-
-    # plt.xlim(0, 4)
-    # plt.ylim(0, 2_000_000)
-
-    # st.pyplot(plt)
-
-    # st.write(df_health_reg[["cost_per_bed", "nurses_per_bed"]].head(112))
-
-st.header("Two-Way Fixed Effects: Cost per Bed on Beds per Nurse (Region + Year)")
-
-# generate a new dataset were we have the demeaned data to have a bit more overview
-df_fe = df_health_reg.copy()
-
-# calculate the mean in general
-mean_nurses = df_fe["nurses_per_bed"].mean()
-mean_cost = df_fe["cost_per_bedday"].mean()
-
-# demean year and regions / used a bit help of AI with .transform
-region_mean_nurses = df_fe.groupby("Region")["nurses_per_bed"].transform("mean")
-year_mean_nurses = df_fe.groupby("Year")["nurses_per_bed"].transform("mean")
-
-region_mean_cost = df_fe.groupby("Region")["cost_per_bedday"].transform("mean")
-year_mean_cost = df_fe.groupby("Year")["cost_per_bedday"].transform("mean")
-
-#generate the new datapoints by using double demeaning (thanks to ronak jain and intermediate econometrics)
-df_fe["nurses_dd"] = (df_fe["nurses_per_bed"] - region_mean_nurses - year_mean_nurses + mean_nurses)
-df_fe["cost_dd"] = (df_fe["cost_per_bedday"] - region_mean_cost - year_mean_cost + mean_cost)
-
-#regress and plot as used to above
-X = df_fe[["nurses_dd"]]
-y = df_fe["cost_dd"]
-
-model_fe = LinearRegression().fit(X, y)
-df_fe["regline_dd"] = model_fe.predict(X)
-
-plt.figure()
-plt.scatter(df_fe["nurses_dd"], df_fe["cost_dd"], label="Data (within Region & Year)")
-plt.plot(df_fe["nurses_dd"], df_fe["regline_dd"], label="Two-Way FE Regression")
-plt.xlabel("Nurses per Bed (within Region & Year)")
-plt.ylabel("Cost per Bedday (within Region & Year)")
-
-
-st.pyplot(plt)
