@@ -210,6 +210,8 @@ with tab3:
            "Total Devices", "Total Examinations", "Nurses_Amount_General"]
     
     df_health_reg = df_health.dropna(subset=req).copy()
+    # drop Switzerland as it is not a region
+    df_health_reg = df_health_reg[df_health_reg["Region"] != "Schweiz"] 
 
     ###generating some new variables for the regressions
     df_health_reg["Bed_OccupancyDays_General"] = df_health_reg["Bed_CapacityDays_General"] * (df_health_reg["Bed_Occupancy_General"] / 100)
