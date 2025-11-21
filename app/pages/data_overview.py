@@ -277,16 +277,25 @@ with tab3:
     df_fe["nurses_dd"] = (df_fe["nurses_per_bed"] - region_mean_nurses - year_mean_nurses + mean_nurses)
     df_fe["cost_dd"] = (df_fe["cost_per_bedday"] - region_mean_cost - year_mean_cost + mean_cost)
 
-    #regress and plot as used to above
-    X2 = df_fe[["nurses_dd"]]
+     # removing influential datapoints in retrospect as the regression had some influential datapoints by looking at the cooks distance 
+    # (used AI for the Code, Intution done by ourselves)
+    X2 = sm.add_constant(df_fe[["nurses_dd"]])
     y2 = df_fe["cost_dd"]
+    model_fe_1 = sm.OLS(y2, X2).fit()
+    influence = model_fe_1.get_influence()
+    df_fe["cooks_d1"] = influence.cooks_distance[0]
+    threshold = 4 / len(df_fe) ## using just the 4/n rule for the definition of outliers
+    df_fe_clean_1 = df_fe[df_fe["cooks_d1"] < threshold]
 
-    model_fe_1 = LinearRegression().fit(X2, y2)
-    df_fe["regline_dd"] = model_fe_1.predict(X2)
+    Xc1 = sm.add_constant(df_fe_clean_1[["nurses_dd"]])
+    yc1 = df_fe_clean_1["cost_dd"]
+    model_fe_clean_1 = LinearRegression().fit(Xc1, yc1)
+    df_fe_clean_1["regline_dd"] = model_fe_clean_1.predict(Xc1)
+
 
     plt.figure()
-    plt.scatter(df_fe["nurses_dd"], df_fe["cost_dd"], label="Data (within Region & Year)")
-    plt.plot(df_fe["nurses_dd"], df_fe["regline_dd"], label="Two-Way FE Regression", color = "magenta")
+    plt.scatter(df_fe_clean_1["nurses_dd"], df_fe_clean_1["cost_dd"], label="Data (within Region & Year)")
+    plt.plot(df_fe_clean_1["nurses_dd"], df_fe_clean_1["regline_dd"], label="Two-Way FE Regression", color = "magenta")
     plt.xlabel("Nurses per Bed (within Region & Year)")
     plt.ylabel("Cost per Bedday (within Region & Year)")
     plt.legend()
@@ -296,12 +305,12 @@ with tab3:
 
     #2.2) adding some statistical key figures
     X2 = sm.add_constant(X2)
-    model_2_2 = sm.OLS(y2, X2).fit()
+    model_fe_clean_1 = sm.OLS(y2, X2).fit()
 
-    st.write("Slope:", round(model_2_2.params["nurses_dd"], 2))
-    st.write("Std. Error:", round(model_2_2.bse["nurses_dd"], 2))
-    st.write("P-value:", round(model_2_2.pvalues[1], 2))
-    st.write("R^2:", round(model_2_2.rsquared, 2))
+    st.write("Slope:", round(model_fe_clean_1.params["nurses_dd"], 2))
+    st.write("Std. Error:", round(model_fe_clean_1.bse["nurses_dd"], 2))
+    st.write("P-value:", round(model_fe_clean_1.pvalues[1], 2))
+    st.write("R^2:", round(model_fe_clean_1.rsquared, 2))
 
     #3) cost_per_bed ~ Bed_Occupancy_General
     st.header("Linear Regression: Cost per Bedday on Average occupied Beddays")
@@ -363,18 +372,18 @@ with tab3:
     y4 = df_fe_2["cost_dd"]
     model_fe_2 = sm.OLS(y4, X4).fit()
     influence = model_fe_2.get_influence()
-    df_fe_2["cooks_d"] = influence.cooks_distance[0]
+    df_fe_2["cooks_d2"] = influence.cooks_distance[0]
     threshold = 4 / len(df_fe_2) ## using just the 4/n rule for the definition of outliers
-    df_fe_clean_1 = df_fe_2[df_fe_2["cooks_d"] < threshold]
+    df_fe_clean_2 = df_fe_2[df_fe_2["cooks_d2"] < threshold]
 
-    Xc = sm.add_constant(df_fe_clean_1[["days_dd"]])
-    yc = df_fe_clean_1["cost_dd"]
-    model_fe_clean = LinearRegression().fit(Xc, yc)
-    df_fe_clean_1["regline_dd"] = model_fe_clean.predict(Xc)
+    Xc2 = sm.add_constant(df_fe_clean_2[["days_dd"]])
+    yc2 = df_fe_clean_2["cost_dd"]
+    model_fe_clean_2 = LinearRegression().fit(Xc2, yc2)
+    df_fe_clean_2["regline_dd"] = model_fe_clean_2.predict(Xc2)
 
     plt.figure()
-    plt.scatter(df_fe_clean_1["days_dd"], df_fe_clean_1["cost_dd"], label="Data (within Region & Year)")
-    plt.plot(df_fe_clean_1["days_dd"], df_fe_clean_1["regline_dd"], label="Two-Way FE Regression", color = "magenta")
+    plt.scatter(df_fe_clean_2["days_dd"], df_fe_clean_2["cost_dd"], label="Data (within Region & Year)")
+    plt.plot(df_fe_clean_2["days_dd"], df_fe_clean_2["regline_dd"], label="Two-Way FE Regression", color = "magenta")
     plt.xlabel("Avg. Beddays (within Region & Year)")
     plt.ylabel("Cost per Bedday (within Region & Year)")
     plt.legend()
@@ -383,55 +392,10 @@ with tab3:
     st.pyplot(plt)
 
     #4.2) adding some statistical key figures
-    Xc = sm.add_constant(Xc)
-    model_fe_clean = sm.OLS(yc, Xc).fit()
+    Xc2 = sm.add_constant(Xc2)
+    model_fe_clean_2 = sm.OLS(yc2, Xc2).fit()
 
-    st.write("Slope:", round(model_fe_clean.params["days_dd"], 2))
-    st.write("Std. Error:", round(model_fe_clean.bse["days_dd"], 2))
-    st.write("P-value:", round(model_fe_clean.pvalues[1], 2))
-    st.write("R^2:", round(model_fe_clean.rsquared, 2))
-
-    # # Two-Way FE: Regression with Outlier Removal
-    # # X und y für FE (double-demeaned Variablen)
-    # X_fe = sm.add_constant(df_fe_2[["days_dd"]])
-    # y_fe = df_fe_2["cost_dd"]
-
-    # # Erste Regression (vor Outlier-Entfernung)
-    # model_fe = sm.OLS(y_fe, X_fe).fit()
-
-    # # Cook’s Distance berechnen
-    # influence = model_fe.get_influence()
-    # df_fe_2["cooks_d"] = influence.cooks_distance[0]
-
-    # # Threshold für Ausreißer
-    # threshold = 4 / len(df_fe_2)
-
-    # # Ausreißer herausfiltern
-    # df_clean = df_fe_2[df_fe_2["cooks_d"] < threshold]
-
-    # # Regression NACH Outlier-Entfernung
-    # X_clean = sm.add_constant(df_clean[["days_dd"]])
-    # y_clean = df_clean["cost_dd"]
-
-    # model_clean = sm.OLS(y_clean, X_clean).fit()
-
-    # # Neue Linie
-    # df_clean["regline_dd"] = model_clean.predict(X_clean)
-
-    # # Plotten
-    # plt.figure()
-    # plt.scatter(df_clean["days_dd"], df_clean["cost_dd"], label="Clean Data", color="blue")
-    # plt.plot(df_clean["days_dd"], df_clean["regline_dd"], color="magenta", linewidth=2, label="Clean Regression")
-    # plt.xlabel("Avg. Beddays (within Region & Year)")
-    # plt.ylabel("Cost per Bedday (within Region & Year)")
-    # plt.legend()
-    # st.pyplot(plt)
-
-    # #4.2) adding some statistical key figures
-    # X_clean = sm.add_constant(X_clean)
-    # model_4_3 = sm.OLS(y_clean, X_clean).fit()
-
-    # st.write("Slope:", round(model_4_3.params["days_dd"], 2))
-    # st.write("Std. Error:", round(model_4_3.bse["days_dd"], 2))
-    # st.write("P-value:", round(model_4_3.pvalues[1], 2))
-    # st.write("R^2:", round(model_4_3.rsquared, 2))
+    st.write("Slope:", round(model_fe_clean_2.params["days_dd"], 2))
+    st.write("Std. Error:", round(model_fe_clean_2.bse["days_dd"], 2))
+    st.write("P-value:", round(model_fe_clean_2.pvalues[1], 2))
+    st.write("R^2:", round(model_fe_clean_2.rsquared, 2))
