@@ -4,6 +4,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
 
 # Wichtig: Page Config möglichst früh
 st.set_page_config(
@@ -12,9 +13,9 @@ st.set_page_config(
     layout="wide")
 
 # content
-st.title("Switzerland's Hospital System: Between Performance and Bottleneck.")
-st.subheader("Discover how Swiss hospitals have evolved over the past decade — where resources are optimally used, where inefficiencies occur, and how data-driven planning can shape the future of healthcare.")
-st.markdown("This dashboard provides an analytical view of the Swiss hospital landscape.  It highlights efficiency trends, capacity imbalances, and regional differences —  helping healthcare planners make better, data-driven decisions for the future")
+st.title("Switzerland's Hospital System: Between Performance and Bottleneck")
+st.markdown("🔎 Discover how Swiss hospitals have evolved over the past decade — where resources are optimally used, where inefficiencies occur, and how data-driven planning can shape the future of healthcare.")
+
 
 # BI-Diagram Dashboard
 
@@ -23,7 +24,6 @@ DATA_PATH = HERE.parent / "data" / "bi_diagramm_data.xlsx"
 
 df_sim = pd.read_excel(DATA_PATH, na_values=["x"])
 st.title("Swiss Hospital Data")
-st.subheader("Data Overview")
 
 # KPI Dashboard
 
@@ -58,6 +58,7 @@ total_cost = float(selected_row["Treatment Cost"])
 
 # Average Treatment Cost
 avg_treat_cost = round(total_cost / total_patients, 2)
+
 
 # KPI-Box Functions
 
@@ -160,7 +161,7 @@ def donut_card(row, columns, title, col):
 
     with col:
         with st.container(border=True):
-            st.markdown(f"### {title}")
+            st.markdown(f"**{title}**")
             st.plotly_chart(
                 fig,
                 use_container_width=True,
@@ -225,14 +226,14 @@ def radar_chart(row, title, col):
 
     with col:
         with st.container(border=True):
-            st.markdown(f"### {title}")
+            st.markdown(f"**{title}**")
             st.plotly_chart(
                 fig,
                 use_container_width=True,
                 config={"displayModeBar": False})
 
     # warn message
-    threshold = 0.85  # randomly chosen
+    threshold = 0.91  # randomly chosen
     critical = ratio >= threshold
     if critical.any():
         overloaded = [labels[i] for i, v in enumerate(critical) if v]
@@ -379,35 +380,138 @@ def patient_area_chart(df_sim):
     return fig
 
 
+def total_bed_occupancy(row):
+    """Berechnet die gesamte Betten-Auslastung in % über alle Departments."""
+    beds_cols = ["Beds_Onc", "Beds_Emer", "Beds_Pall", "Beds_Sur",
+                 "Beds_Int", "Beds_Gyn", "Beds_Neo", "Beds_Ger"]
+    occ_cols = ["Beds_Onc_Occ", "Beds_Emer_Occ", "Beds_Pall_Occ", "Beds_Sur_Occ",
+                "Beds_Int_Occ", "Beds_Gyn_Occ", "Beds_Neo_Occ", "Beds_Ger_Occ"]
+
+    total_beds = row[beds_cols].sum()
+    total_occ = row[occ_cols].sum()
+
+    if total_beds == 0:
+        return 0.0
+
+    return float(total_occ / total_beds * 100)
+
+
+bed_occupancy_pct = total_bed_occupancy(selected_row)
+
+
+def bed_occupancy_gauge(value_pct: float):
+    """
+    Vertikales Gauge ohne Zahlen.
+    Drei gleich große Zonen (optisch Drittel):
+      < 80%  = Low capacity utilization
+      80–90% = Optimal
+      > 90%  = High capacity utilization
+
+    Nur die Zone, in der value_pct liegt, wird kräftig eingefärbt,
+    die anderen sind blass/hinterlegt.
+    """
+    fig = go.Figure()
+
+    # 1) bestimmen, in welcher Zone wir sind (nach deinen Schwellen)
+    if value_pct < 80:
+        active_zone = "low"
+    elif value_pct <= 95:
+        active_zone = "optimal"
+    else:
+        active_zone = "high"
+
+    colors_base = {
+        "high":    "rgba(231, 76, 60, 0.25)",   # #E74C3C blass
+        "optimal": "rgba(82, 179, 174, 0.25)",  # F5B7B1 blass
+        "low":     "rgba(245, 183, 177, 0.25)",  # #52B3AE blass
+    }
+    colors_high = {
+        "high":    "rgba(231, 76, 60, 1)",      # High full red
+        "optimal": "rgba(82, 179, 174, 1)",    # Optimal full rosé
+        "low":     "rgba(245, 183, 177, 1)",     # Low full teal
+    }
+    # 3) Drei optisch gleich große Segmente (Drittel)
+    segments = [
+        ("high",    66.67, 100),   # oben
+        ("optimal", 33.33, 66.67),  # Mitte
+        ("low",      0.0, 33.33),  # unten
+    ]
+
+    for name, y0, y1 in segments:
+        fig.add_shape(
+            type="rect",
+            x0=0, x1=1,
+            y0=y0, y1=y1,
+            fillcolor=colors_high[name] if name == active_zone else colors_base[name],
+            line=dict(width=0),
+        )
+
+    # 4) Labels mittig in die Blöcke schreiben
+    fig.add_annotation(
+        x=0.5, y=(0 + 33.33) / 2,  # Mitte vom unteren Drittel
+        text="Low capacity\nutilization",
+        showarrow=False,
+        font=dict(size=10, color="black"),
+        align="center"
+    )
+    fig.add_annotation(
+        x=0.5, y=(33.33 + 66.67) / 2,
+        text="Optimal",
+        showarrow=False,
+        font=dict(size=10, color="black"),
+        align="center"
+    )
+    fig.add_annotation(
+        x=0.5, y=(66.67 + 100) / 2,
+        text="High capacity\nutilization",
+        showarrow=False,
+        font=dict(size=10, color="black"),
+        align="center"
+    )
+
+    # 5) Achsen komplett ausblenden (keine Zahlen)
+    fig.update_xaxes(visible=False, range=[0, 1])
+    fig.update_yaxes(visible=False, range=[0, 100])
+
+    fig.update_layout(
+        title="",
+        margin=dict(l=40, r=40, t=10, b=10),
+        height=380,
+        width=160,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
+
+    return fig
+
+
 # Layout: KPIs + Charts
-
-
 col1, col2, col3 = st.columns((3, 6, 3), gap="medium")
 
 with col1:
     metric_chart(
-        f"Total Patient {selected_month} {selected_year}",
+        f"**Total Patient {selected_month} {selected_year}**",
         total_patients,
         delta_patients)
 
-with col2:
+with col3:
     metric_chart(
-        f"Total Staff {selected_month} {selected_year}",
+        f"**Total Staff {selected_month} {selected_year}**",
         total_staff,
         delta_staff)
 
-with col3:
+with col2:
     metric_chart(
-        f"Avg. Treatment Cost per Patient ({selected_month} {selected_year})",
+        f"**Avg.Treat.Cost/Patient({selected_month} {selected_year}**)",
         avg_treat_cost,
         delta_cost)
 
 # Donut-Pie
 diet_cols = [
-    "Raw_diet",
-    "Soft_diet",
-    "Normal_diet",
-    "Diabetic_diet",
+    "Raw Diet",
+    "Soft Diet",
+    "Normal Diet",
+    "Diabetic Diet",
     "Vegetarian/Vegan"]
 
 with col1:
@@ -424,7 +528,7 @@ with col2:
         title=f"Bed Capacity vs. Occupancy — {selected_month} {selected_year}",
         col=col2)
 
-st.markdown("### Staff Composition over Time (Dec 2024 – Dec 2025)")
+st.markdown("**Staff Composition over Time (Dec 2024 – Dec 2025)**")
 
 with st.container(border=True):
     fig_staff = staff_area_chart(df_sim)
@@ -434,8 +538,18 @@ with st.container(border=True):
         config={"displayModeBar": False})
 
 
-st.markdown("### Patient Composition over Time (Dec 2024 – Dec 2025)")
+st.markdown("**Patient Composition over Time (Dec 2024 – Dec 2025)**")
 with st.container(border=True):
     fig_pat = patient_area_chart(df_sim)
     st.plotly_chart(fig_pat, use_container_width=True,
                     config={"displayModeBar": False})
+
+with col3:
+    with st.container(border=True):
+        st.markdown(
+            f"**Total Bed Occupancy — {selected_month} {selected_year}**")
+        fig_gauge = bed_occupancy_gauge(bed_occupancy_pct)
+        st.plotly_chart(
+            fig_gauge,
+            use_container_width=True,
+            config={"displayModeBar": False})
