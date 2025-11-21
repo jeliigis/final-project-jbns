@@ -203,27 +203,31 @@ with tab3:
     import matplotlib.pyplot as plt
 
     # --- Vorbereitung
+    ###first i rename some columns because the description is wrong/misleading
+    df_health = df_health.rename(columns={"Bed_OccupancyDays_Basic": "Bed_CapacityDays_Basic", "Bed_OccupancyDays_Central": "Bed_CapacityDays_Central", "Bed_OccupancyDays_General": "Bed_CapacityDays_General"})
     req = ["Region", "Year", "Cost_Total", "Staff_Total", "Beds_Total_General", "Bed_Occupancy_General",
            "Total Devices", "Total Examinations", "Nurses_Amount_General"]
+    
     df_health_reg = df_health.dropna(subset=req).copy()
 
-    df_health_reg["cost_per_bed"] = df_health_reg["Cost_Total"] / \
-        df_health_reg["Beds_Total_General"]
-    df_health_reg["nurses_per_bed"] = df_health_reg["Nurses_Amount_General"] / \
-        df_health_reg["Beds_Total_General"]
-    df_health_reg["examinations_per_device"] = df_health_reg["Total Examinations"] / \
-        df_health_reg["Total Devices"]
+    ###generating some new variables for the regressions
+    df_health_reg["Bed_OccupancyDays_General"] = df_health_reg["Bed_CapacityDays_General"] * (df_health_reg["Bed_Occupancy_General"] / 100)
+    df_health_reg["Avg_Days_Occ"] = df_health_reg["Bed_OccupancyDays_General"] / df_health_reg["Beds_Total_General"]
+
+    df_health_reg["cost_per_bedday"] = df_health_reg["Cost_Total"] / df_health_reg["Bed_OccupancyDays_General"]
+    df_health_reg["nurses_per_bed"] = df_health_reg["Nurses_Amount_General"] / df_health_reg["Beds_Total_General"]
+    df_health_reg["examinations_per_device"] = df_health_reg["Total Examinations"] / df_health_reg["Total Devices"]
 
     # nur sinnvolle Zeilen behalten / with the help of AI
     df_health_reg = df_health_reg.replace([np.inf, -np.inf], np.nan).dropna()
-    df_health_reg = df_health_reg[df_health_reg["cost_per_bed"] != 0]
+    df_health_reg = df_health_reg[df_health_reg["cost_per_bedday"] != 0]
 
     st.title("Linear Regressions")
 
     # --- 1) cost_per_bed ~ nurses_per_bed
-    st.header("Linear Regression: Cost per Bed on Beds per Nurse")
+    st.header("Linear Regression: Cost per Bed Day on Beds per Nurse")
     X1 = df_health_reg[["nurses_per_bed"]]   # 2D
-    y1 = df_health_reg["cost_per_bed"]       # 1D
+    y1 = df_health_reg["cost_per_bedday"]       # 1D
 
     model1 = LinearRegression().fit(X1, y1)
     df_health_reg["Regression_nurses"] = model1.predict(X1)
@@ -233,20 +237,20 @@ with tab3:
 
     plt.figure()
     plt.scatter(df_health_reg["nurses_per_bed"],
-                df_health_reg["cost_per_bed"], label="Data")
+                df_health_reg["cost_per_bedday"], label="Data")
     plt.plot(df_health_reg["nurses_per_bed"],
              df_health_reg["Regression_nurses"], label="Regression", color="magenta", linewidth=2)
     plt.xlabel("Nurses per bed")
-    plt.ylabel("Cost per bed")
+    plt.ylabel("Cost per bedday")
     plt.legend()
     st.pyplot(plt)
 
     # --- 2) cost_per_bed ~ Bed_Occupancy_General
-    st.header("Linear Regression: Cost per Bed on Bed Occupancy Score")
+    st.header("Linear Regression: Cost per Bedday on Average occupied Beddays")
 
     # WICHTIG: X als 2D-DataFrame
-    X2 = df_health_reg[["Bed_Occupancy_General"]]
-    y2 = df_health_reg["cost_per_bed"]
+    X2 = df_health_reg[["Avg_Days_Occ"]]
+    y2 = df_health_reg["cost_per_bedday"]
 
     model2 = LinearRegression().fit(X2, y2)
     df_health_reg["Regression_occupancy"] = model2.predict(X2)
@@ -255,26 +259,25 @@ with tab3:
     st.write(f"Slope: {model2.coef_[0]:.2f}")
 
     plt.figure()
-    plt.scatter(df_health_reg["Bed_Occupancy_General"],
-                df_health_reg["cost_per_bed"], label="Data")
-    plt.plot(df_health_reg["Bed_Occupancy_General"],
+    plt.scatter(df_health_reg["Avg_Days_Occ"],
+                df_health_reg["cost_per_bedday"], label="Data")
+    plt.plot(df_health_reg["Avg_Days_Occ"],
              df_health_reg["Regression_occupancy"], label="Regression", color="magenta", linewidth=2)
-    plt.xlabel("Bed Occupancy Rate")
-    plt.ylabel("Cost per bed")
+    plt.xlabel("Avg. Days Occ")
+    plt.ylabel("Cost per bedday")
     plt.legend()
     # Passe die Achse an deine Skala an (0–1 oder 0–100)
-    plt.xlim(df_health_reg["Bed_Occupancy_General"].min()*0.95,
-             df_health_reg["Bed_Occupancy_General"].max()*1.05)
-    plt.ylim(0, 2_000_000)
+    ###plt.xlim(df_health_reg["Bed_Occupancy_General"].min()*0.95,
+             ###df_health_reg["Bed_Occupancy_General"].max()*1.05)
+    ###plt.ylim(0, 2_000_000)
     st.pyplot(plt)
 
-    st.write(df_health_reg[["cost_per_bed",
-             "nurses_per_bed", "Bed_Occupancy_General"]].head(15))
 
-    # --- 3) cost per bed ~ examinations per device
-    st.header("Linear Regression: Cost per Bed on Examinations per Device")
+
+    # --- 3) cost per bedday ~ examinations per device
+    st.header("Linear Regression: Cost per Bedday on Examinations per Device")
     X3 = df_health_reg[["examinations_per_device"]]
-    y3 = df_health_reg["cost_per_bed"]
+    y3 = df_health_reg["cost_per_bedday"]
 
     model3 = LinearRegression(). fit(X3, y3)
     df_health_reg["Regression_examinations"] = model3.predict(X3)
@@ -284,16 +287,16 @@ with tab3:
 
     plt.figure()
     plt.scatter(df_health_reg["examinations_per_device"],
-                df_health_reg["cost_per_bed"], label="Data")
+                df_health_reg["cost_per_bedday"], label="Data")
     plt.plot(df_health_reg["examinations_per_device"],
              df_health_reg["Regression_examinations"], label="Regression", color="magenta", linewidth=2)
     plt.xlabel("Examinations per Device")
-    plt.ylabel("Cost per bed")
+    plt.ylabel("Cost per bedday")
     plt.legend()
     # Passe die Achse an deine Skala an (0–1 oder 0–100)
-    plt.xlim(df_health_reg["examinations_per_device"].min()*0.95,
-             df_health_reg["examinations_per_device"].max()*1.05)
-    plt.ylim(0, 2_000_000)
+    ##plt.xlim(df_health_reg["examinations_per_device"].min()*0.95,
+            ##df_health_reg["examinations_per_device"].max()*1.05)
+    ##plt.ylim(0, 2_000_000)
     st.pyplot(plt)
 
 
@@ -372,18 +375,18 @@ df_fe = df_health_reg.copy()
 
 # calculate the mean in general
 mean_nurses = df_fe["nurses_per_bed"].mean()
-mean_cost = df_fe["cost_per_bed"].mean()
+mean_cost = df_fe["cost_per_bedday"].mean()
 
 # demean year and regions / used a bit help of AI with .transform
 region_mean_nurses = df_fe.groupby("Region")["nurses_per_bed"].transform("mean")
 year_mean_nurses = df_fe.groupby("Year")["nurses_per_bed"].transform("mean")
 
-region_mean_cost = df_fe.groupby("Region")["cost_per_bed"].transform("mean")
-year_mean_cost = df_fe.groupby("Year")["cost_per_bed"].transform("mean")
+region_mean_cost = df_fe.groupby("Region")["cost_per_bedday"].transform("mean")
+year_mean_cost = df_fe.groupby("Year")["cost_per_bedday"].transform("mean")
 
 #generate the new datapoints by using double demeaning (thanks to ronak jain and intermediate econometrics)
 df_fe["nurses_dd"] = (df_fe["nurses_per_bed"] - region_mean_nurses - year_mean_nurses + mean_nurses)
-df_fe["cost_dd"] = (df_fe["cost_per_bed"] - region_mean_cost - year_mean_cost + mean_cost)
+df_fe["cost_dd"] = (df_fe["cost_per_bedday"] - region_mean_cost - year_mean_cost + mean_cost)
 
 #regress and plot as used to above
 X = df_fe[["nurses_dd"]]
@@ -396,7 +399,7 @@ plt.figure()
 plt.scatter(df_fe["nurses_dd"], df_fe["cost_dd"], label="Data (within Region & Year)")
 plt.plot(df_fe["nurses_dd"], df_fe["regline_dd"], label="Two-Way FE Regression")
 plt.xlabel("Nurses per Bed (within Region & Year)")
-plt.ylabel("Cost per Bed (within Region & Year)")
+plt.ylabel("Cost per Bedday (within Region & Year)")
 
 
 st.pyplot(plt)
