@@ -201,6 +201,7 @@ with tab3:
     import numpy as np
     import pandas as pd
     import matplotlib.pyplot as plt
+    import statsmodels.api as sm
 
     # --- Vorbereitung
     ###first i rename some columns because the description is wrong/misleading
@@ -224,7 +225,7 @@ with tab3:
 
     st.title("Linear Regressions")
 
-    # --- 1) cost_per_bed ~ nurses_per_bed
+    #1) cost_per_bed ~ nurses_per_bed
     st.header("Linear Regression: Cost per Bed Day on Beds per Nurse")
     X1 = df_health_reg[["nurses_per_bed"]]   # 2D
     y1 = df_health_reg["cost_per_bedday"]       # 1D
@@ -245,7 +246,18 @@ with tab3:
     plt.legend()
     st.pyplot(plt)
 
-    # --- 2) cost per beddays - nurses per bed (with two way FE)
+    #1.2) adding some statistical key figures
+    X1 = sm.add_constant(X1)
+    model_1_2 = sm.OLS(y1, X1).fit()
+
+    st.write("Slope:", round(model_1_2.params["nurses_per_bed"], 2))
+    st.write("Std. Error:", round(model_1_2.bse["nurses_per_bed"], 2))
+    st.write("P-value:", round(model_1_2.pvalues[1], 2))
+    st.write("R^2:", round(model_1_2.rsquared, 2))
+
+
+
+    #2) cost per beddays - nurses per bed (with two way FE)
     st.header("Two-Way Fixed Effects: Cost per Bedday on Beds per Nurse (Region + Year)")
 
     # generate a new dataset were we have the demeaned data to have a bit more overview
@@ -283,7 +295,16 @@ with tab3:
 
     st.pyplot(plt)
 
-    # --- 3) cost_per_bed ~ Bed_Occupancy_General
+    #2.2) adding some statistical key figures
+    X2 = sm.add_constant(X2)
+    model_2_2 = sm.OLS(y2, X2).fit()
+
+    st.write("Slope:", round(model_2_2.params["nurses_dd"], 2))
+    st.write("Std. Error:", round(model_2_2.bse["nurses_dd"], 2))
+    st.write("P-value:", round(model_2_2.pvalues[1], 2))
+    st.write("R^2:", round(model_2_2.rsquared, 2))
+
+    #3) cost_per_bed ~ Bed_Occupancy_General
     st.header("Linear Regression: Cost per Bedday on Average occupied Beddays")
 
     # WICHTIG: X als 2D-DataFrame
@@ -306,7 +327,16 @@ with tab3:
     plt.legend()
     st.pyplot(plt)
 
-    # --- 4) cost per beddays - nurses per bed (with two way FE)
+    #3.2) adding some statistical key figures
+    X3 = sm.add_constant(X3)
+    model_3_2 = sm.OLS(y3, X3).fit()
+
+    st.write("Slope:", round(model_3_2.params["Avg_Days_Occ"], 2))
+    st.write("Std. Error:", round(model_3_2.bse["Avg_Days_Occ"], 2))
+    st.write("P-value:", round(model_3_2.pvalues[1], 2))
+    st.write("R^2:", round(model_3_2.rsquared, 2))
+
+    #4) cost per beddays - nurses per bed (with two way FE)
     st.header("Two-Way Fixed Effects: Cost per Bedday on Average occupied Beddays (Region + Year)")
 
     # generate a new dataset were we have the demeaned data to have a bit more overview
@@ -343,3 +373,12 @@ with tab3:
 
 
     st.pyplot(plt)
+
+    #4.2) adding some statistical key figures
+    X4 = sm.add_constant(X4)
+    model_4_2 = sm.OLS(y4, X4).fit()
+
+    st.write("Slope:", round(model_4_2.params["days_dd"], 2))
+    st.write("Std. Error:", round(model_4_2.bse["days_dd"], 2))
+    st.write("P-value:", round(model_4_2.pvalues[1], 2))
+    st.write("R^2:", round(model_4_2.rsquared, 2))
