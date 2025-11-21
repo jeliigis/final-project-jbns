@@ -210,7 +210,7 @@ with tab3:
            "Total Devices", "Total Examinations", "Nurses_Amount_General"]
     
     df_health_reg = df_health.dropna(subset=req).copy()
-    # drop Switzerland as it is not a region
+    # drop Switzerland as it is not a region to avoid multicollinearity (dont know if its multicollinearity, but switzerland just exists through the values of the other regions)
     df_health_reg = df_health_reg[df_health_reg["Region"] != "Schweiz"] 
 
     ###generating some new variables for the regressions
@@ -234,9 +234,6 @@ with tab3:
 
     model_1 = LinearRegression().fit(X1, y1)
     df_health_reg["Regression_nurses"] = model_1.predict(X1)
-
-    st.write(f"Intercept: {model_1.intercept_:.2f}")
-    st.write(f"Slope: {model_1.coef_[0]:.2f}")
 
     plt.figure()
     plt.scatter(df_health_reg["nurses_per_bed"],
@@ -316,9 +313,6 @@ with tab3:
     model_2 = LinearRegression().fit(X3, y3)
     df_health_reg["Regression_occupancy"] = model_2.predict(X3)
 
-    st.write(f"Intercept: {model_2.intercept_:.2f}")
-    st.write(f"Slope: {model_2.coef_[0]:.2f}")
-
     plt.figure()
     plt.scatter(df_health_reg["Avg_Days_Occ"],
                 df_health_reg["cost_per_bedday"], label="Data")
@@ -359,16 +353,28 @@ with tab3:
     df_fe_2["days_dd"] = (df_fe_2["Avg_Days_Occ"] - region_mean_days_occ - year_mean_days_occ + mean_days_occ)
     df_fe_2["cost_dd"] = (df_fe_2["cost_per_bedday"] - region_mean_cost - year_mean_cost + mean_cost)
 
-    #regress and plot as used to above
-    X4 = df_fe_2[["days_dd"]]
-    y4 = df_fe_2["cost_dd"]
+    # #regress and plot as used to above
+    # X4 = df_fe_2[["days_dd"]]
+    # y4 = df_fe_2["cost_dd"]
 
-    model_fe_2 = LinearRegression().fit(X4, y4)
-    df_fe_2["regline_dd"] = model_fe_2.predict(X4)
+    # removing influential datapoints in retrospect as the regression had some influential datapoints by looking at the cooks distance 
+    # (used AI for the Code, Intution done by ourselves)
+    X4 = sm.add_constant(df_fe_2[["days_dd"]])
+    y4 = df_fe_2["cost_dd"]
+    model_fe_2 = sm.OLS(y4, X4).fit()
+    influence = model_fe_2.get_influence()
+    df_fe_2["cooks_d"] = influence.cooks_distance[0]
+    threshold = 4 / len(df_fe_2) ## using just the 4/n rule for the definition of outliers
+    df_fe_clean_1 = df_fe_2[df_fe_2["cooks_d"] < threshold]
+
+    Xc = sm.add_constant(df_fe_clean_1[["days_dd"]])
+    yc = df_fe_clean_1["cost_dd"]
+    model_fe_clean = LinearRegression().fit(Xc, yc)
+    df_fe_clean_1["regline_dd"] = model_fe_clean.predict(Xc)
 
     plt.figure()
-    plt.scatter(df_fe_2["days_dd"], df_fe_2["cost_dd"], label="Data (within Region & Year)")
-    plt.plot(df_fe_2["days_dd"], df_fe_2["regline_dd"], label="Two-Way FE Regression", color = "magenta")
+    plt.scatter(df_fe_clean_1["days_dd"], df_fe_clean_1["cost_dd"], label="Data (within Region & Year)")
+    plt.plot(df_fe_clean_1["days_dd"], df_fe_clean_1["regline_dd"], label="Two-Way FE Regression", color = "magenta")
     plt.xlabel("Avg. Beddays (within Region & Year)")
     plt.ylabel("Cost per Bedday (within Region & Year)")
     plt.legend()
@@ -377,10 +383,55 @@ with tab3:
     st.pyplot(plt)
 
     #4.2) adding some statistical key figures
-    X4 = sm.add_constant(X4)
-    model_4_2 = sm.OLS(y4, X4).fit()
+    Xc = sm.add_constant(Xc)
+    model_fe_clean = sm.OLS(yc, Xc).fit()
 
-    st.write("Slope:", round(model_4_2.params["days_dd"], 2))
-    st.write("Std. Error:", round(model_4_2.bse["days_dd"], 2))
-    st.write("P-value:", round(model_4_2.pvalues[1], 2))
-    st.write("R^2:", round(model_4_2.rsquared, 2))
+    st.write("Slope:", round(model_fe_clean.params["days_dd"], 2))
+    st.write("Std. Error:", round(model_fe_clean.bse["days_dd"], 2))
+    st.write("P-value:", round(model_fe_clean.pvalues[1], 2))
+    st.write("R^2:", round(model_fe_clean.rsquared, 2))
+
+    # # Two-Way FE: Regression with Outlier Removal
+    # # X und y für FE (double-demeaned Variablen)
+    # X_fe = sm.add_constant(df_fe_2[["days_dd"]])
+    # y_fe = df_fe_2["cost_dd"]
+
+    # # Erste Regression (vor Outlier-Entfernung)
+    # model_fe = sm.OLS(y_fe, X_fe).fit()
+
+    # # Cook’s Distance berechnen
+    # influence = model_fe.get_influence()
+    # df_fe_2["cooks_d"] = influence.cooks_distance[0]
+
+    # # Threshold für Ausreißer
+    # threshold = 4 / len(df_fe_2)
+
+    # # Ausreißer herausfiltern
+    # df_clean = df_fe_2[df_fe_2["cooks_d"] < threshold]
+
+    # # Regression NACH Outlier-Entfernung
+    # X_clean = sm.add_constant(df_clean[["days_dd"]])
+    # y_clean = df_clean["cost_dd"]
+
+    # model_clean = sm.OLS(y_clean, X_clean).fit()
+
+    # # Neue Linie
+    # df_clean["regline_dd"] = model_clean.predict(X_clean)
+
+    # # Plotten
+    # plt.figure()
+    # plt.scatter(df_clean["days_dd"], df_clean["cost_dd"], label="Clean Data", color="blue")
+    # plt.plot(df_clean["days_dd"], df_clean["regline_dd"], color="magenta", linewidth=2, label="Clean Regression")
+    # plt.xlabel("Avg. Beddays (within Region & Year)")
+    # plt.ylabel("Cost per Bedday (within Region & Year)")
+    # plt.legend()
+    # st.pyplot(plt)
+
+    # #4.2) adding some statistical key figures
+    # X_clean = sm.add_constant(X_clean)
+    # model_4_3 = sm.OLS(y_clean, X_clean).fit()
+
+    # st.write("Slope:", round(model_4_3.params["days_dd"], 2))
+    # st.write("Std. Error:", round(model_4_3.bse["days_dd"], 2))
+    # st.write("P-value:", round(model_4_3.pvalues[1], 2))
+    # st.write("R^2:", round(model_4_3.rsquared, 2))
