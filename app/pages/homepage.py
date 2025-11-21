@@ -238,6 +238,147 @@ def radar_chart(row, title, col):
         overloaded = [labels[i] for i, v in enumerate(critical) if v]
         st.error("⚠️ Critical occupancy in: " + ", ".join(overloaded))
 
+# Area Chart for Staff
+
+
+def staff_area_chart(df_sim):
+    """Stacked Area Chart für Staff-Kategorien über alle Monate (Dec 2024 – Dec 2025)."""
+    # Reihenfolge der Monate definieren
+    month_order = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"]
+
+    # nur die relevanten Spalten
+    staff_cols = ["Doctors", "Nurses", "MedTech", "Cleaning"]
+
+    df_staff = df_sim.copy()
+
+    # Monat numerisch für Sortierung
+    month_map = {m: i+1 for i, m in enumerate(month_order)}
+    df_staff["Month_num"] = df_staff["Month"].map(month_map)
+
+    # sortieren: erst Jahr, dann Monat
+    df_staff = df_staff.sort_values(["Year", "Month_num"])
+
+    # Label für x-Achse, z.B. "Dec 2024"
+    df_staff["Month_label"] = df_staff["Month"].str[:3] + \
+        " " + df_staff["Year"].astype(str)
+
+    # Long-Format für Plotly
+    df_long = df_staff.melt(
+        id_vars=["Year", "Month", "Month_num", "Month_label"],
+        value_vars=staff_cols,
+        var_name="Staff_Type",
+        value_name="Count")
+
+    # Reihenfolge der x-Achse fixieren (sonst sortiert Plotly alphabetisch)
+    month_label_order = df_staff["Month_label"].tolist()
+
+    fig = px.area(
+        df_long,
+        x="Month_label",
+        y="Count",
+        color="Staff_Type",
+        category_orders={
+            "Month_label": month_label_order,
+            "Staff_Type": staff_cols},
+        labels={
+            "Month_label": "Month",
+            "Count": "Number of Staff",
+            "Staff_Type": "Staff Category"})
+
+    fig.update_layout(
+        title="",
+        yaxis=dict(
+            range=[0, 900],
+            dtick=50,
+            showgrid=True,
+            gridcolor="rgba(0,0,0,0.1)"),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.5,
+            xanchor="left",
+            x=0.0,
+            font=dict(size=10)),
+        margin=dict(l=40, r=40, t=40, b=120),
+        height=380)
+
+    return fig
+
+
+def patient_area_chart(df_sim):
+    """Stacked Area Chart für Patienten-Kategorien über alle Monate (Dec 2024 – Dec 2025)."""
+    # Reihenfolge der Monate definieren
+    month_order = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"]
+
+    # 👉 HIER ggf. an deine echten Spaltennamen anpassen
+    patient_cols = ["Newborn", "Children/Teen", "Adult", "Elderly"]
+
+    df_pat = df_sim.copy()
+
+    # Monat numerisch für Sortierung
+    month_map = {m: i + 1 for i, m in enumerate(month_order)}
+    df_pat["Month_num"] = df_pat["Month"].map(month_map)
+
+    # sortieren: erst Jahr, dann Monat
+    df_pat = df_pat.sort_values(["Year", "Month_num"])
+
+    # Label für x-Achse, z.B. "Dec 2024"
+    df_pat["Month_label"] = df_pat["Month"].str[:3] + \
+        " " + df_pat["Year"].astype(str)
+
+    # Long-Format für Plotly
+    df_long = df_pat.melt(
+        id_vars=["Year", "Month", "Month_num", "Month_label"],
+        value_vars=patient_cols,
+        var_name="Patient_Type",
+        value_name="Count",)
+
+    # Reihenfolge der x-Achse fixieren
+    month_label_order = df_pat["Month_label"].tolist()
+
+    fig = px.area(
+        df_long,
+        x="Month_label",
+        y="Count",
+        color="Patient_Type",
+        category_orders={
+            "Month_label": month_label_order,
+            "Patient_Type": patient_cols, },
+        labels={
+            "Month_label": "Month",
+            "Count": "Number of Patients",
+            "Patient_Type": "Patient Category", },)
+
+    # Y-Achse dynamisch aufrunden (Schritte à 50)
+    max_count = df_long["Count"].max()
+    if pd.isna(max_count):
+        max_count = 0
+    upper = ((int(max_count) // 50) + 1) * 50 if max_count > 0 else 50
+
+    fig.update_layout(
+        title="",
+        yaxis=dict(
+            range=[0, 200],
+            dtick=50,
+            showgrid=True,
+            gridcolor="rgba(0,0,0,0.1)",),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.5,
+            xanchor="left",
+            x=0.0,
+            font=dict(size=10),),
+        margin=dict(l=40, r=40, t=40, b=120),
+        height=380,)
+
+    return fig
+
+
 # Layout: KPIs + Charts
 
 
@@ -282,3 +423,19 @@ with col2:
         row=selected_row,
         title=f"Bed Capacity vs. Occupancy — {selected_month} {selected_year}",
         col=col2)
+
+st.markdown("### Staff Composition over Time (Dec 2024 – Dec 2025)")
+
+with st.container(border=True):
+    fig_staff = staff_area_chart(df_sim)
+    st.plotly_chart(
+        fig_staff,
+        use_container_width=True,
+        config={"displayModeBar": False})
+
+
+st.markdown("### Patient Composition over Time (Dec 2024 – Dec 2025)")
+with st.container(border=True):
+    fig_pat = patient_area_chart(df_sim)
+    st.plotly_chart(fig_pat, use_container_width=True,
+                    config={"displayModeBar": False})
