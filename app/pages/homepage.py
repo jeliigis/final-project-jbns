@@ -362,7 +362,7 @@ def patient_area_chart(df_sim):
     fig.update_layout(
         title="",
         yaxis=dict(
-            range=[0, 200],
+            range=[0, 250],
             dtick=50,
             showgrid=True,
             gridcolor="rgba(0,0,0,0.1)",),
