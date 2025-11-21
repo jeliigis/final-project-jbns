@@ -14,8 +14,10 @@ st.set_page_config(
 
 # content
 st.title("Switzerland's Hospital System: Between Performance and Bottleneck")
-st.markdown("🔎 Discover how Swiss hospitals have evolved over the past decade — where resources are optimally used, where inefficiencies occur, and how data-driven planning can shape the future of healthcare.")
-
+st.markdown(
+    "🔎 Discover how a figurative Swiss hospital could potentially look like and its kpi's development.")
+st.write("This dashboard was created to display various measurements and illustrations relating to a hospital. "
+         "The data was generated synthetically and is not intended to be interpreted in terms of content. The aim would be to use data for a real hospital in Switzerland. ")
 
 # BI-Diagram Dashboard
 
