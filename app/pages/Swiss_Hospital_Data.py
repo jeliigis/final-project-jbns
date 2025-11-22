@@ -14,9 +14,9 @@ DATA_PATH = HERE.parent / "data" / "df_health.xlsx"  # = app/data/df_health.xlsx
 
 df_health = pd.read_excel(DATA_PATH, na_values=["x"])
 st.title("Swiss Hospital Data")
-st.subheader("Data Overview")
-tab1, tab2, tab3 = st.tabs(
-    ["Development Statistics", "Occupancy Statistics", "Regression"])
+st.write("_based on Federal Statistical Office, 2025_")
+tab1, tab2, tab3, tab4 = st.tabs(
+    ["Development Visualisation", "Regional Structure Trend ", "Linear Regression", "Overview Dataset"])
 # st.dataframe(df_health)
 
 
@@ -24,7 +24,8 @@ tab1, tab2, tab3 = st.tabs(
 # df_health = pd.read_excel(ROOT / "data" / "df_health.xlsx")
 
 with tab1:
-    st.header("Development Statistics")
+    st.header("Development Visualisation")
+    st.write("Development of Swiss Hospitals captured in bar plots")
 
     # generating a bar plot for the total of hospitals trend over the years
     df_ch_hospitals = df_health[df_health["Region"] == "Schweiz"]
@@ -100,13 +101,14 @@ with tab1:
             marker="o", label="Total Nurses")
     ax.set_title("Development of Beds vs Nurses (Switzerland)")
     ax.legend()
-    st.pyplot(fig)
-    st.caption("_x-axis = Year, y-axis= Total Beds and Nurses_")
-    st.write("While nurses numbers have steadily increased in recent years, the number of beds requiring care has fallen in parallel. "
-             "This development has eased the burden on nursing staff, although it should be noted that individual treatments may have become more intensive as a result. ")
+    # st.pyplot(fig)
+    # st.caption("_x-axis = Year, y-axis= Total Beds and Nurses_")
+    # st.write("While nurses numbers have steadily increased in recent years, the number of beds requiring care has fallen in parallel. "
+    # "This development has eased the burden on nursing staff, although it should be noted that individual treatments may have become more intensive as a result. ")
 
 with tab2:
-    st.subheader("Occupancy Statistics")
+    st.subheader("Regional Structure Trend")
+    st.write("Overview of regional differences in infrastrutural and staff trend")
     # generating a line plot for the examinations per device
     column_devices = ["Angiographie_Device", "CT_Scanner_Device", "Dialyse_Device", "Gamma_Camera_Device",
                       "Linear_Accelerator_Device",	"Lithotriptor_Device", "MRI_Device", "Pet_Scanner_Device"]
@@ -122,9 +124,6 @@ with tab2:
     df_ch_ExPerDe = df_health[df_health['Region'] == 'Schweiz']
 
     # for this line chart we used the help of ai but made sure to understand what he is doing
-
-    st.header("Examinations per Device – Trend by Regions")
-
     # Verfügbare Regionen (inkl. Schweiz)
     regionen = sorted(df_health['Region'].dropna().unique().tolist())
 
@@ -146,6 +145,7 @@ with tab2:
         ax.set_title("Examinations per Device - Trend by Regions")
         ax.grid(True)
         ax.legend(title="Region")
+        st.header("Examinations per Device – Trend by Regions")
         st.pyplot(fig)
     else:
         st.info("Please choose at least one region.")
@@ -204,30 +204,37 @@ with tab3:
     import statsmodels.api as sm
 
     # --- Vorbereitung
-    ###first i rename some columns because the description is wrong/misleading
-    df_health = df_health.rename(columns={"Bed_OccupancyDays_Basic": "Bed_CapacityDays_Basic", "Bed_OccupancyDays_Central": "Bed_CapacityDays_Central", "Bed_OccupancyDays_General": "Bed_CapacityDays_General"})
+    # first i rename some columns because the description is wrong/misleading
+    df_health = df_health.rename(columns={"Bed_OccupancyDays_Basic": "Bed_CapacityDays_Basic",
+                                 "Bed_OccupancyDays_Central": "Bed_CapacityDays_Central", "Bed_OccupancyDays_General": "Bed_CapacityDays_General"})
     req = ["Region", "Year", "Cost_Total", "Staff_Total", "Beds_Total_General", "Bed_Occupancy_General",
            "Total Devices", "Total Examinations", "Nurses_Amount_General"]
-    
+
     df_health_reg = df_health.dropna(subset=req).copy()
     # drop Switzerland as it is not a region to avoid multicollinearity (dont know if its multicollinearity, but switzerland just exists through the values of the other regions)
-    df_health_reg = df_health_reg[df_health_reg["Region"] != "Schweiz"] 
+    df_health_reg = df_health_reg[df_health_reg["Region"] != "Schweiz"]
 
-    ###generating some new variables for the regressions
-    df_health_reg["Bed_OccupancyDays_General"] = df_health_reg["Bed_CapacityDays_General"] * (df_health_reg["Bed_Occupancy_General"] / 100)
-    df_health_reg["Avg_Days_Occ"] = df_health_reg["Bed_OccupancyDays_General"] / df_health_reg["Beds_Total_General"]
+    # generating some new variables for the regressions
+    df_health_reg["Bed_OccupancyDays_General"] = df_health_reg["Bed_CapacityDays_General"] * \
+        (df_health_reg["Bed_Occupancy_General"] / 100)
+    df_health_reg["Avg_Days_Occ"] = df_health_reg["Bed_OccupancyDays_General"] / \
+        df_health_reg["Beds_Total_General"]
 
-    df_health_reg["cost_per_bedday"] = df_health_reg["Cost_Total"] / df_health_reg["Bed_OccupancyDays_General"]
-    df_health_reg["nurses_per_bed"] = df_health_reg["Nurses_Amount_General"] / df_health_reg["Beds_Total_General"]
-    df_health_reg["examinations_per_device"] = df_health_reg["Total Examinations"] / df_health_reg["Total Devices"]
+    df_health_reg["cost_per_bedday"] = df_health_reg["Cost_Total"] / \
+        df_health_reg["Bed_OccupancyDays_General"]
+    df_health_reg["nurses_per_bed"] = df_health_reg["Nurses_Amount_General"] / \
+        df_health_reg["Beds_Total_General"]
+    df_health_reg["examinations_per_device"] = df_health_reg["Total Examinations"] / \
+        df_health_reg["Total Devices"]
 
     # nur sinnvolle Zeilen behalten / with the help of AI
     df_health_reg = df_health_reg.replace([np.inf, -np.inf], np.nan).dropna()
     df_health_reg = df_health_reg[df_health_reg["cost_per_bedday"] != 0]
 
-    st.title("Linear Regressions")
+    st.subheader("Linear Regressions")
+    st.write("Statistical Measurement with OLS")
 
-    #1) cost_per_bed ~ nurses_per_bed
+    # 1) cost_per_bed ~ nurses_per_bed
     st.header("Linear Regression: Cost per Bed Day on Beds per Nurse")
     X1 = df_health_reg[["nurses_per_bed"]]   # 2D
     y1 = df_health_reg["cost_per_bedday"]       # 1D
@@ -245,7 +252,7 @@ with tab3:
     plt.legend()
     st.pyplot(plt)
 
-    #1.2) adding some statistical key figures
+    # 1.2) adding some statistical key figures
     X1 = sm.add_constant(X1)
     model_1_2 = sm.OLS(y1, X1).fit()
 
@@ -254,10 +261,9 @@ with tab3:
     st.write("P-value:", round(model_1_2.pvalues[1], 2))
     st.write("R^2:", round(model_1_2.rsquared, 2))
 
-
-
-    #2) cost per beddays - nurses per bed (with two way FE)
-    st.header("Two-Way Fixed Effects: Cost per Bedday on Beds per Nurse (Region + Year)")
+    # 2) cost per beddays - nurses per bed (with two way FE)
+    st.header(
+        "Two-Way Fixed Effects: Cost per Bedday on Beds per Nurse (Region + Year)")
 
     # generate a new dataset were we have the demeaned data to have a bit more overview
     df_fe = df_health_reg.copy()
@@ -267,24 +273,30 @@ with tab3:
     mean_cost = df_fe["cost_per_bedday"].mean()
 
     # demean year and regions / used a bit help of AI with .transform
-    region_mean_nurses = df_fe.groupby("Region")["nurses_per_bed"].transform("mean")
-    year_mean_nurses = df_fe.groupby("Year")["nurses_per_bed"].transform("mean")
+    region_mean_nurses = df_fe.groupby(
+        "Region")["nurses_per_bed"].transform("mean")
+    year_mean_nurses = df_fe.groupby(
+        "Year")["nurses_per_bed"].transform("mean")
 
-    region_mean_cost = df_fe.groupby("Region")["cost_per_bedday"].transform("mean")
+    region_mean_cost = df_fe.groupby(
+        "Region")["cost_per_bedday"].transform("mean")
     year_mean_cost = df_fe.groupby("Year")["cost_per_bedday"].transform("mean")
 
-    #generate the new datapoints by using double demeaning (thanks to ronak jain and intermediate econometrics)
-    df_fe["nurses_dd"] = (df_fe["nurses_per_bed"] - region_mean_nurses - year_mean_nurses + mean_nurses)
-    df_fe["cost_dd"] = (df_fe["cost_per_bedday"] - region_mean_cost - year_mean_cost + mean_cost)
+    # generate the new datapoints by using double demeaning (thanks to ronak jain and intermediate econometrics)
+    df_fe["nurses_dd"] = (df_fe["nurses_per_bed"] -
+                          region_mean_nurses - year_mean_nurses + mean_nurses)
+    df_fe["cost_dd"] = (df_fe["cost_per_bedday"] -
+                        region_mean_cost - year_mean_cost + mean_cost)
 
-     # removing influential datapoints in retrospect as the regression had some influential datapoints by looking at the cooks distance 
+    # removing influential datapoints in retrospect as the regression had some influential datapoints by looking at the cooks distance
     # (used AI for the Code, Intution done by ourselves)
     X2 = sm.add_constant(df_fe[["nurses_dd"]])
     y2 = df_fe["cost_dd"]
     model_fe_1 = sm.OLS(y2, X2).fit()
     influence = model_fe_1.get_influence()
     df_fe["cooks_d1"] = influence.cooks_distance[0]
-    threshold = 4 / len(df_fe) ## using just the 4/n rule for the definition of outliers
+    # using just the 4/n rule for the definition of outliers
+    threshold = 4 / len(df_fe)
     df_fe_clean_1 = df_fe[df_fe["cooks_d1"] < threshold]
 
     Xc1 = sm.add_constant(df_fe_clean_1[["nurses_dd"]])
@@ -292,18 +304,18 @@ with tab3:
     model_fe_clean_1 = LinearRegression().fit(Xc1, yc1)
     df_fe_clean_1["regline_dd"] = model_fe_clean_1.predict(Xc1)
 
-
     plt.figure()
-    plt.scatter(df_fe_clean_1["nurses_dd"], df_fe_clean_1["cost_dd"], label="Data (within Region & Year)")
-    plt.plot(df_fe_clean_1["nurses_dd"], df_fe_clean_1["regline_dd"], label="Two-Way FE Regression", color = "magenta")
+    plt.scatter(df_fe_clean_1["nurses_dd"], df_fe_clean_1["cost_dd"],
+                label="Data (within Region & Year)")
+    plt.plot(df_fe_clean_1["nurses_dd"], df_fe_clean_1["regline_dd"],
+             label="Two-Way FE Regression", color="magenta")
     plt.xlabel("Nurses per Bed (within Region & Year)")
     plt.ylabel("Cost per Bedday (within Region & Year)")
     plt.legend()
 
-
     st.pyplot(plt)
 
-    #2.2) adding some statistical key figures
+    # 2.2) adding some statistical key figures
     X2 = sm.add_constant(X2)
     model_fe_clean_1 = sm.OLS(y2, X2).fit()
 
@@ -312,7 +324,7 @@ with tab3:
     st.write("P-value:", round(model_fe_clean_1.pvalues[1], 2))
     st.write("R^2:", round(model_fe_clean_1.rsquared, 2))
 
-    #3) cost_per_bed ~ Bed_Occupancy_General
+    # 3) cost_per_bed ~ Bed_Occupancy_General
     st.header("Linear Regression: Cost per Bedday on Average occupied Beddays")
 
     # WICHTIG: X als 2D-DataFrame
@@ -332,7 +344,7 @@ with tab3:
     plt.legend()
     st.pyplot(plt)
 
-    #3.2) adding some statistical key figures
+    # 3.2) adding some statistical key figures
     X3 = sm.add_constant(X3)
     model_3_2 = sm.OLS(y3, X3).fit()
 
@@ -341,8 +353,9 @@ with tab3:
     st.write("P-value:", round(model_3_2.pvalues[1], 2))
     st.write("R^2:", round(model_3_2.rsquared, 2))
 
-    #4) cost per beddays - nurses per bed (with two way FE)
-    st.header("Two-Way Fixed Effects: Cost per Bedday on Average occupied Beddays (Region + Year)")
+    # 4) cost per beddays - nurses per bed (with two way FE)
+    st.header(
+        "Two-Way Fixed Effects: Cost per Bedday on Average occupied Beddays (Region + Year)")
 
     # generate a new dataset were we have the demeaned data to have a bit more overview
     df_fe_2 = df_health_reg.copy()
@@ -352,28 +365,35 @@ with tab3:
     mean_cost = df_fe_2["cost_per_bedday"].mean()
 
     # demean year and regions / used a bit help of AI with .transform
-    region_mean_days_occ = df_fe_2.groupby("Region")["Avg_Days_Occ"].transform("mean")
-    year_mean_days_occ = df_fe_2.groupby("Year")["Avg_Days_Occ"].transform("mean")
+    region_mean_days_occ = df_fe_2.groupby(
+        "Region")["Avg_Days_Occ"].transform("mean")
+    year_mean_days_occ = df_fe_2.groupby(
+        "Year")["Avg_Days_Occ"].transform("mean")
 
-    region_mean_cost = df_fe_2.groupby("Region")["cost_per_bedday"].transform("mean")
-    year_mean_cost = df_fe_2.groupby("Year")["cost_per_bedday"].transform("mean")
+    region_mean_cost = df_fe_2.groupby(
+        "Region")["cost_per_bedday"].transform("mean")
+    year_mean_cost = df_fe_2.groupby(
+        "Year")["cost_per_bedday"].transform("mean")
 
-    #generate the new datapoints by using double demeaning (thanks to ronak jain and intermediate econometrics)
-    df_fe_2["days_dd"] = (df_fe_2["Avg_Days_Occ"] - region_mean_days_occ - year_mean_days_occ + mean_days_occ)
-    df_fe_2["cost_dd"] = (df_fe_2["cost_per_bedday"] - region_mean_cost - year_mean_cost + mean_cost)
+    # generate the new datapoints by using double demeaning (thanks to ronak jain and intermediate econometrics)
+    df_fe_2["days_dd"] = (df_fe_2["Avg_Days_Occ"] -
+                          region_mean_days_occ - year_mean_days_occ + mean_days_occ)
+    df_fe_2["cost_dd"] = (df_fe_2["cost_per_bedday"] -
+                          region_mean_cost - year_mean_cost + mean_cost)
 
     # #regress and plot as used to above
     # X4 = df_fe_2[["days_dd"]]
     # y4 = df_fe_2["cost_dd"]
 
-    # removing influential datapoints in retrospect as the regression had some influential datapoints by looking at the cooks distance 
+    # removing influential datapoints in retrospect as the regression had some influential datapoints by looking at the cooks distance
     # (used AI for the Code, Intution done by ourselves)
     X4 = sm.add_constant(df_fe_2[["days_dd"]])
     y4 = df_fe_2["cost_dd"]
     model_fe_2 = sm.OLS(y4, X4).fit()
     influence = model_fe_2.get_influence()
     df_fe_2["cooks_d2"] = influence.cooks_distance[0]
-    threshold = 4 / len(df_fe_2) ## using just the 4/n rule for the definition of outliers
+    # using just the 4/n rule for the definition of outliers
+    threshold = 4 / len(df_fe_2)
     df_fe_clean_2 = df_fe_2[df_fe_2["cooks_d2"] < threshold]
 
     Xc2 = sm.add_constant(df_fe_clean_2[["days_dd"]])
@@ -382,16 +402,17 @@ with tab3:
     df_fe_clean_2["regline_dd"] = model_fe_clean_2.predict(Xc2)
 
     plt.figure()
-    plt.scatter(df_fe_clean_2["days_dd"], df_fe_clean_2["cost_dd"], label="Data (within Region & Year)")
-    plt.plot(df_fe_clean_2["days_dd"], df_fe_clean_2["regline_dd"], label="Two-Way FE Regression", color = "magenta")
+    plt.scatter(df_fe_clean_2["days_dd"], df_fe_clean_2["cost_dd"],
+                label="Data (within Region & Year)")
+    plt.plot(df_fe_clean_2["days_dd"], df_fe_clean_2["regline_dd"],
+             label="Two-Way FE Regression", color="magenta")
     plt.xlabel("Avg. Beddays (within Region & Year)")
     plt.ylabel("Cost per Bedday (within Region & Year)")
     plt.legend()
 
-
     st.pyplot(plt)
 
-    #4.2) adding some statistical key figures
+    # 4.2) adding some statistical key figures
     Xc2 = sm.add_constant(Xc2)
     model_fe_clean_2 = sm.OLS(yc2, Xc2).fit()
 
@@ -399,3 +420,35 @@ with tab3:
     st.write("Std. Error:", round(model_fe_clean_2.bse["days_dd"], 2))
     st.write("P-value:", round(model_fe_clean_2.pvalues[1], 2))
     st.write("R^2:", round(model_fe_clean_2.rsquared, 2))
+
+
+with tab4:
+    import matplotlib.pyplot as plt
+    st.subheader("Overview merged Dataset")
+    st.write("For our project, we used available datasets from the Federal Statistic Office Switzerland and merged them into one main dataset. "
+             "Feel free to look at the it and make use of the filter option if you are interested in specific variables, regions or years.")
+
+    HERE = Path(__file__).resolve().parent  # path to app/pages
+    DATA_PATH = HERE.parent / "data" / "df_health.xlsx"  # path to app/data/df_health
+    df_health = pd.read_excel(DATA_PATH, na_values=["x"])
+
+    # displaying the data
+    # using placeholders because we want the table to be above the filters
+    title_placeholder = st.empty()
+    table_placeholder = st.empty()
+
+    # adding a filter for years and regions
+    st.subheader("Filter the data")
+    years = st.multiselect("Select years", sorted(
+        df_health["Year"].unique()), default=sorted(df_health["Year"].unique()))
+    regions = st.multiselect("Select regions", sorted(
+        df_health["Region"].unique()), default=sorted(df_health["Region"].unique()))
+
+    # adding a filter, which columns should be displayed
+    categories = st.multiselect(
+        "Select columns", df_health.columns, default=df_health.columns)
+    df_health = df_health[df_health["Year"].isin(
+        years) & df_health["Region"].isin(regions)][categories]
+
+    title_placeholder.header("Swiss Hospital Data over the last decade")
+    table_placeholder.dataframe(df_health)
