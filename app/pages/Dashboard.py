@@ -417,7 +417,7 @@ def bed_occupancy_gauge(value_pct: float):
     # 1) bestimmen, in welcher Zone wir sind (nach deinen Schwellen)
     if value_pct < 80:
         active_zone = "low"
-    elif value_pct <= 95:
+    elif value_pct <= 90:
         active_zone = "optimal"
     else:
         active_zone = "high"
