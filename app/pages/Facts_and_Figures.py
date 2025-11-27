@@ -251,13 +251,13 @@ with tab3:
     for r in regions:
         subset_regions = df_health_reg[df_health_reg["Region"] == r]
         plt.scatter(subset_regions["nurses_per_bed"],
-                    subset_regions["cost_per_bedday"], label="Data")
+                    subset_regions["cost_per_bedday"], label = r)
 
     plt.plot(df_health_reg["nurses_per_bed"],
              df_health_reg["Regression_nurses"], label="Regression", color="magenta")
     plt.xlabel("Nurses per bed")
     plt.ylabel("Cost per bedday")
-    plt.legend()
+    plt.legend(title = "Region", bbox_to_anchor = (-0.55, 1), loc = "upper left")
     st.pyplot(plt)
 
     # coloring in the years
@@ -273,13 +273,13 @@ with tab3:
     for t in time:
         subset_time = df_health_reg[df_health_reg["Year"] == t]
         plt.scatter(subset_time["nurses_per_bed"],
-                    subset_time["cost_per_bedday"], label="Data")
+                    subset_time["cost_per_bedday"], label= t)
 
     plt.plot(df_health_reg["nurses_per_bed"],
              df_health_reg["Regression_nurses"], label="Regression", color="magenta")
     plt.xlabel("Nurses per bed")
     plt.ylabel("Cost per bedday")
-    plt.legend()
+    plt.legend(title = "Year", bbox_to_anchor = (-0.55, 1), loc = "upper left")
     st.pyplot(plt)
 
     # 1.2) adding some statistical key figures
@@ -368,12 +368,12 @@ with tab3:
     for r in regions:
         subset_regions = df_health_reg[df_health_reg["Region"] == r]
         plt.scatter(subset_regions["Avg_Days_Occ"],
-                    subset_regions["cost_per_bedday"], label="Data")
+                    subset_regions["cost_per_bedday"], label = r)
     plt.plot(df_health_reg["Avg_Days_Occ"],
              df_health_reg["Regression_occupancy"], label="Regression", color="magenta")
     plt.xlabel("Avg. Days Occ")
     plt.ylabel("Cost per bedday")
-    plt.legend()
+    plt.legend(title = "Region", bbox_to_anchor = (-0.55, 1), loc = "upper left")
     st.pyplot(plt)
 
     # 3) cost_per_bed ~ Bed_Occupancy_General
@@ -390,12 +390,12 @@ with tab3:
     for t in time:
         subset_time = df_health_reg[df_health_reg["Year"] == t]
         plt.scatter(subset_time["Avg_Days_Occ"],
-                    subset_time["cost_per_bedday"], label="Data")
+                    subset_time["cost_per_bedday"], label = t)
     plt.plot(df_health_reg["Avg_Days_Occ"],
              df_health_reg["Regression_occupancy"], label="Regression", color="magenta")
     plt.xlabel("Avg. Days Occ")
     plt.ylabel("Cost per bedday")
-    plt.legend()
+    plt.legend(title = "Time", bbox_to_anchor = (0.5, -0.15), loc = "upper center", ncol = 8)
     st.pyplot(plt)
 
     # 3.2) adding some statistical key figures
@@ -430,10 +430,8 @@ with tab3:
         "Year")["cost_per_bedday"].transform("mean")
 
     # generate the new datapoints by using double demeaning (thanks to ronak jain and intermediate econometrics)
-    df_fe_2["days_dd"] = (df_fe_2["Avg_Days_Occ"] -
-                          region_mean_days_occ - year_mean_days_occ + mean_days_occ)
-    df_fe_2["cost_dd"] = (df_fe_2["cost_per_bedday"] -
-                          region_mean_cost - year_mean_cost + mean_cost)
+    df_fe_2["days_dd"] = (df_fe_2["Avg_Days_Occ"] - region_mean_days_occ - year_mean_days_occ + mean_days_occ)
+    df_fe_2["cost_dd"] = (df_fe_2["cost_per_bedday"] - region_mean_cost - year_mean_cost + mean_cost)
 
     # #regress and plot as used to above
     # X4 = df_fe_2[["days_dd"]]
@@ -455,6 +453,7 @@ with tab3:
     model_fe_clean_2 = LinearRegression().fit(Xc2, yc2)
     df_fe_clean_2["regline_dd"] = model_fe_clean_2.predict(Xc2)
 
+    #plotting as used to
     plt.figure()
     plt.scatter(df_fe_clean_2["days_dd"], df_fe_clean_2["cost_dd"],
                 label="Data (within Region & Year)")
@@ -462,7 +461,7 @@ with tab3:
              label="Two-Way FE Regression", color="magenta")
     plt.xlabel("Avg. Beddays (within Region & Year)")
     plt.ylabel("Cost per Bedday (within Region & Year)")
-    plt.legend()
+    plt.legend(title = "Year", bbox_to_anchor = (-0.55, 1), loc = "upper left")
 
     st.pyplot(plt)
 
