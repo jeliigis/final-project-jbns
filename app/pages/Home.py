@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+from PIL import Image
 
 st.set_page_config(
     page_title="Swiss Hospital Analysis",
@@ -10,12 +11,28 @@ st.set_page_config(
 HERE = Path(__file__).resolve().parent
 HERO_IMG = HERE.parent.parent / "images" / "hospital.jpg"
 
-st.image(HERO_IMG, use_container_width=True)
+original_img = Image.open(HERO_IMG)
+w, h = original_img.size
+crop_fraction = 0.35      # << hier ändern nach Wunsch
+crop_height = int(h * crop_fraction)
+top = (h - crop_height) // 2
+bottom = top + crop_height
+cropped_img = original_img.crop((0, top, w, bottom))
+st.image(cropped_img, use_container_width=True)
 
-
-st.markdown("""
-<div style="height:20px; background:#46644AA; margin:50px 0;"></div>
-""", unsafe_allow_html=True)
+st.markdown(
+    """
+    <div style="text-align:left; font-size:11px; opacity:0.7;">
+        Source:
+        <a href="https://www.nytimes.com/2017/02/22/well/live/bad-hospital-design-is-making-us-sicker.html"
+           target="_blank"
+           style="color:inherit; text-decoration:none;">
+            NYTimes
+        </a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 
 st.title("Switzerland's Hospital System: Between Performance and Bottleneck")
@@ -31,10 +48,10 @@ st.write("In our Streamlit web app, we focus on two main areas of content: "
 col8, col9 = st.columns(2)
 
 with col8:
-    btn_data = st.button("➡️ Explore Swiss Hospital Data")
+    btn_data = st.button("➡️ Explore Facts and Figures about Swiss Hospitals")
 
-with col9:
-    btn_dash = st.button("➡️ Explore Dashboard")
+with col8:
+    btn_dash = st.button("➡️ Explore Dashboard for Sample Hospital")
 
 if btn_data:
     st.switch_page("pages/Facts_and_Figures.py")
