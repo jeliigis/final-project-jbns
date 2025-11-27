@@ -14,7 +14,7 @@ st.image(HERO_IMG, use_container_width=True)
 
 
 st.markdown("""
-<div style="height:10px; background:#46644AA; margin:50px 0;"></div>
+<div style="height:20px; background:#46644AA; margin:50px 0;"></div>
 """, unsafe_allow_html=True)
 
 
