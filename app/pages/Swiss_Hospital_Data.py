@@ -226,8 +226,8 @@ with tab3:
         df_health_reg["Beds_Total_General"]
     df_health_reg["examinations_per_device"] = df_health_reg["Total Examinations"] / \
         df_health_reg["Total Devices"]
-    
-    ### generating a list) for regions and year (time so we can use it for coloring the datapoint
+
+    # generating a list) for regions and year (time so we can use it for coloring the datapoint
     regions = df_health_reg["Region"].unique()
     time = df_health_reg["Year"].unique()
 
@@ -250,7 +250,8 @@ with tab3:
 
     for r in regions:
         subset_regions = df_health_reg[df_health_reg["Region"] == r]
-        plt.scatter(subset_regions["nurses_per_bed"], subset_regions["cost_per_bedday"], label = r)
+        plt.scatter(subset_regions["nurses_per_bed"],
+                    subset_regions["cost_per_bedday"], label = r)
 
     plt.plot(df_health_reg["nurses_per_bed"],
              df_health_reg["Regression_nurses"], label="Regression", color="magenta")
@@ -271,7 +272,8 @@ with tab3:
 
     for t in time:
         subset_time = df_health_reg[df_health_reg["Year"] == t]
-        plt.scatter(subset_time["nurses_per_bed"], subset_time["cost_per_bedday"], label= t)
+        plt.scatter(subset_time["nurses_per_bed"],
+                    subset_time["cost_per_bedday"], label= t)
 
     plt.plot(df_health_reg["nurses_per_bed"],
              df_health_reg["Regression_nurses"], label="Regression", color="magenta")
@@ -365,7 +367,8 @@ with tab3:
     plt.figure()
     for r in regions:
         subset_regions = df_health_reg[df_health_reg["Region"] == r]
-        plt.scatter(subset_regions["Avg_Days_Occ"], subset_regions["cost_per_bedday"], label = r)
+        plt.scatter(subset_regions["Avg_Days_Occ"],
+                    subset_regions["cost_per_bedday"], label = r)
     plt.plot(df_health_reg["Avg_Days_Occ"],
              df_health_reg["Regression_occupancy"], label="Regression", color="magenta")
     plt.xlabel("Avg. Days Occ")
@@ -386,14 +389,14 @@ with tab3:
     plt.figure()
     for t in time:
         subset_time = df_health_reg[df_health_reg["Year"] == t]
-        plt.scatter(subset_time["Avg_Days_Occ"], subset_time["cost_per_bedday"], label = t)
+        plt.scatter(subset_time["Avg_Days_Occ"],
+                    subset_time["cost_per_bedday"], label = t)
     plt.plot(df_health_reg["Avg_Days_Occ"],
              df_health_reg["Regression_occupancy"], label="Regression", color="magenta")
     plt.xlabel("Avg. Days Occ")
     plt.ylabel("Cost per bedday")
     plt.legend(title = "Time", bbox_to_anchor = (0.5, -0.15), loc = "upper center", ncol = 8)
     st.pyplot(plt)
-
 
     # 3.2) adding some statistical key figures
     X3 = sm.add_constant(X3)

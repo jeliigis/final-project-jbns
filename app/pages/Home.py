@@ -37,10 +37,10 @@ with col9:
     btn_dash = st.button("➡️ Explore Dashboard")
 
 if btn_data:
-    st.switch_page("pages/Swiss_Hospital_Data.py")
+    st.switch_page("pages/Facts_and_Figures.py")
 
 if btn_dash:
-    st.switch_page("pages/Dashboard.py")
+    st.switch_page("pages/Dashboard_for_Sample_Hospital.py")
 
 # About us
 st.subheader("About us")
