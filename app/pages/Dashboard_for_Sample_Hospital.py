@@ -492,6 +492,78 @@ def bed_occupancy_area_chart(df_sim):
     return fig
 
 
+def avg_cost_line_chart(df_sim):
+    """Line Chart für den Verlauf der durchschnittlichen Behandlungskosten pro Patient (Dec 2024 – Dec 2025)."""
+    # Reihenfolge der Monate definieren
+    month_order = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ]
+
+    df_cost = df_sim.copy()
+
+    # Monat numerisch für Sortierung
+    month_map = {m: i + 1 for i, m in enumerate(month_order)}
+    df_cost["Month_num"] = df_cost["Month"].map(month_map)
+
+    # sortieren: erst Jahr, dann Monat
+    df_cost = df_cost.sort_values(["Year", "Month_num"])
+
+    # Label für x-Achse, z.B. "Dec 2024"
+    df_cost["Month_label"] = df_cost["Month"].str[:3] + \
+        " " + df_cost["Year"].astype(str)
+
+    # Durchschnittliche Kosten pro Patient
+    df_cost["AvgCost"] = df_cost["Treatment Cost"] / df_cost["Total Patient"]
+    df_cost["AvgCost"] = df_cost["AvgCost"].replace(
+        [np.inf, -np.inf], np.nan).fillna(0)
+
+    # Reihenfolge der x-Achse fixieren
+    month_label_order = df_cost["Month_label"].tolist()
+
+    fig = px.line(
+        df_cost,
+        x="Month_label",
+        y="AvgCost",
+        markers=True,
+        category_orders={"Month_label": month_label_order},
+        labels={
+            "Month_label": "Month",
+            "AvgCost": "Average Treatment Cost per Patient",
+        },
+    )
+
+    # Y-Achse dynamisch aufrunden (Schritte à 50)
+    max_val = df_cost["AvgCost"].max()
+    if pd.isna(max_val):
+        max_val = 0
+    upper = ((int(max_val) // 50) + 1) * 50 if max_val > 0 else 50
+
+    # Y-Achse auf runde 20k-Schritte setzen
+    max_val = df_cost["AvgCost"].max()
+    if pd.isna(max_val):
+        max_val = 0
+
+    # oberes Limit aufrunden auf nächsten 20k Schritt
+    upper = ((int(max_val) // 20000) + 1) * 20000 if max_val > 0 else 20000
+
+    fig.update_layout(
+        title="",
+        yaxis=dict(
+            range=[0, upper],
+            dtick=20000,   # <<< 20k-Schritte
+            showgrid=True,
+            gridcolor="rgba(0,0,0,0.1)",
+            tickformat=".0f"  # echte Zahlen, kein k-Suffix
+        ),
+        showlegend=False,
+        margin=dict(l=40, r=40, t=40, b=120),
+        height=380,
+    )
+
+    return fig
+
+
 def total_bed_occupancy(row):
     """Berechnet die gesamte Betten-Auslastung in % über alle Departments."""
     beds_cols = ["Beds_Onc", "Beds_Emer", "Beds_Pall", "Beds_Sur",
@@ -561,7 +633,7 @@ def bed_occupancy_gauge(value_pct: float):
     # 4) Labels mittig in die Blöcke schreiben
     fig.add_annotation(
         x=0.5, y=(0 + 33.33) / 2,  # Mitte vom unteren Drittel
-        text="Low capacity\nutilization",
+        text="Low",
         showarrow=False,
         font=dict(size=10, color="black"),
         align="center"
@@ -575,7 +647,7 @@ def bed_occupancy_gauge(value_pct: float):
     )
     fig.add_annotation(
         x=0.5, y=(66.67 + 100) / 2,
-        text="High capacity\nutilization",
+        text="High",
         showarrow=False,
         font=dict(size=10, color="black"),
         align="center"
@@ -674,6 +746,16 @@ with left2:
         fig_bed = bed_occupancy_area_chart(df_sim)
         st.plotly_chart(
             fig_bed,
+            use_container_width=True,
+            config={"displayModeBar": False}
+        )
+with right2:
+    st.markdown(
+        "**Average Treatment Cost per Patient over Time (Dec 2024 – Dec 2025)**")
+    with st.container(border=True):
+        fig_avg_cost = avg_cost_line_chart(df_sim)
+        st.plotly_chart(
+            fig_avg_cost,
             use_container_width=True,
             config={"displayModeBar": False}
         )
