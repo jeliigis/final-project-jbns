@@ -46,7 +46,10 @@ selected_row = df_sim[
 
 # KPI Calculation
 
-st.subheader(f"Key Figures {selected_month} {selected_year}")
+st.subheader("Monthly Overview")
+st.write(f"Key Figures {selected_month} {selected_year}")
+st.caption(
+    "ⓘ Percentage change (Δ) is calculated as month-to-month change compared to the previous month.")
 
 # Total Patients
 total_patients = int(selected_row["Total Patient"])
@@ -311,13 +314,13 @@ def staff_area_chart(df_sim):
 
 
 def patient_area_chart(df_sim):
-    """Stacked Area Chart für Patienten-Kategorien über alle Monate (Dec 2024 – Dec 2025)."""
+    """Stacked Area Chart for Patienten-Kategorien über alle Monate (Dec 2024 – Dec 2025)."""
     # Reihenfolge der Monate definieren
     month_order = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"]
 
-    # 👉 HIER ggf. an deine echten Spaltennamen anpassen
+    #
     patient_cols = ["Newborn", "Children/Teen", "Adult", "Elderly"]
 
     df_pat = df_sim.copy()
@@ -382,6 +385,113 @@ def patient_area_chart(df_sim):
     return fig
 
 
+def bed_occupancy_area_chart(df_sim):
+    """
+    Stacked Area Chart für belegte Betten nach Department über alle Monate
+    (Dec 2024 – Dec 2025).
+    """
+    # Reihenfolge der Monate definieren
+    month_order = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"]
+
+    # belegte Betten je Department
+    occ_cols = [
+        "Beds_Onc_Occ",
+        "Beds_Emer_Occ",
+        "Beds_Pall_Occ",
+        "Beds_Sur_Occ",
+        "Beds_Int_Occ",
+        "Beds_Gyn_Occ",
+        "Beds_Neo_Occ",
+        "Beds_Ger_Occ",
+    ]
+
+    # schönere Labels
+    dept_labels = {
+        "Beds_Onc_Occ": "Oncology",
+        "Beds_Emer_Occ": "Emergency",
+        "Beds_Pall_Occ": "Palliative",
+        "Beds_Sur_Occ": "Surgery",
+        "Beds_Int_Occ": "Internal",
+        "Beds_Gyn_Occ": "Gynecology",
+        "Beds_Neo_Occ": "Neonatology",
+        "Beds_Ger_Occ": "Geriatrics",
+    }
+
+    df_bed = df_sim.copy()
+
+    # Monat numerisch für Sortierung
+    month_map = {m: i + 1 for i, m in enumerate(month_order)}
+    df_bed["Month_num"] = df_bed["Month"].map(month_map)
+
+    # sortieren: erst Jahr, dann Monat
+    df_bed = df_bed.sort_values(["Year", "Month_num"])
+
+    # Label für x-Achse, z.B. "Dec 2024"
+    df_bed["Month_label"] = df_bed["Month"].str[:3] + \
+        " " + df_bed["Year"].astype(str)
+
+    # Long-Format für Plotly
+    df_long = df_bed.melt(
+        id_vars=["Year", "Month", "Month_num", "Month_label"],
+        value_vars=occ_cols,
+        var_name="Department_raw",
+        value_name="Occupied_Beds",
+    )
+
+    df_long["Department"] = df_long["Department_raw"].map(dept_labels)
+
+    # Reihenfolge der x-Achse fixieren
+    month_label_order = df_bed["Month_label"].tolist()
+    dept_order = list(dept_labels.values())
+
+    fig = px.area(
+        df_long,
+        x="Month_label",
+        y="Occupied_Beds",
+        color="Department",
+        category_orders={
+            "Month_label": month_label_order,
+            "Department": dept_order,
+        },
+        labels={
+            "Month_label": "Month",
+            "Occupied_Beds": "Occupied Beds",
+            "Department": "Department",
+        },
+    )
+
+    # Y-Achse dynamisch (Schritte à 10/20 je nach Skala)
+    max_count = df_long.groupby("Month_label")["Occupied_Beds"].sum().max()
+    if pd.isna(max_count):
+        max_count = 0
+    upper = ((int(max_count) // 10) + 1) * 10 if max_count > 0 else 10
+
+    fig.update_layout(
+        title="",
+        yaxis=dict(
+            range=[0, upper],
+            dtick=10,
+            showgrid=True,
+            gridcolor="rgba(0,0,0,0.1)",
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.55,
+            xanchor="left",
+            x=-0.1,
+            traceorder="normal",
+            font=dict(size=10),
+        ),
+        margin=dict(l=40, r=40, t=40, b=120),
+        height=380,
+    )
+
+    return fig
+
+
 def total_bed_occupancy(row):
     """Berechnet die gesamte Betten-Auslastung in % über alle Departments."""
     beds_cols = ["Beds_Onc", "Beds_Emer", "Beds_Pall", "Beds_Sur",
@@ -425,12 +535,12 @@ def bed_occupancy_gauge(value_pct: float):
     colors_base = {
         "high":    "rgba(231, 76, 60, 0.25)",   # #E74C3C blass
         "optimal": "rgba(82, 179, 174, 0.25)",  # F5B7B1 blass
-        "low":     "rgba(245, 183, 177, 0.25)",  # #52B3AE blass
+        "low":     "rgba(231, 76, 60, 0.25)",  # #52B3AE blass
     }
     colors_high = {
         "high":    "rgba(231, 76, 60, 1)",      # High full red
         "optimal": "rgba(82, 179, 174, 1)",    # Optimal full rosé
-        "low":     "rgba(245, 183, 177, 1)",     # Low full teal
+        "low":     "rgba(231, 76, 60, 1)",     # Low full teal
     }
     # 3) Drei optisch gleich große Segmente (Drittel)
     segments = [
@@ -495,7 +605,6 @@ with col1:
         f"**Total Patient {selected_month} {selected_year}**",
         total_patients,
         delta_patients)
-
 with col3:
     metric_chart(
         f"**Total Staff {selected_month} {selected_year}**",
@@ -507,6 +616,7 @@ with col2:
         f"**Avg.Treat.Cost/Patient({selected_month} {selected_year}**)",
         avg_treat_cost,
         delta_cost)
+
 
 # Donut-Pie
 diet_cols = [
@@ -530,21 +640,44 @@ with col2:
         title=f"Bed Capacity vs. Occupancy — {selected_month} {selected_year}",
         col=col2)
 
-st.markdown("**Staff Composition over Time (Dec 2024 – Dec 2025)**")
+st.header("Yearly Overview")
+# --- 2×2 GRID FÜR DIE AREA-CHARTS ---
 
-with st.container(border=True):
-    fig_staff = staff_area_chart(df_sim)
-    st.plotly_chart(
-        fig_staff,
-        use_container_width=True,
-        config={"displayModeBar": False})
+# 1. Zeile: Staff (links) + Patients (rechts)
+left1, right1 = st.columns(2, gap="medium")
 
+with left1:
+    st.markdown("**Staff Composition over Time (Dec 2024 – Dec 2025)**")
+    with st.container(border=True):
+        fig_staff = staff_area_chart(df_sim)
+        st.plotly_chart(
+            fig_staff,
+            use_container_width=True,
+            config={"displayModeBar": False}
+        )
 
-st.markdown("**Patient Composition over Time (Dec 2024 – Dec 2025)**")
-with st.container(border=True):
-    fig_pat = patient_area_chart(df_sim)
-    st.plotly_chart(fig_pat, use_container_width=True,
-                    config={"displayModeBar": False})
+with right1:
+    st.markdown("**Patient Composition over Time (Dec 2024 – Dec 2025)**")
+    with st.container(border=True):
+        fig_pat = patient_area_chart(df_sim)
+        st.plotly_chart(
+            fig_pat,
+            use_container_width=True,
+            config={"displayModeBar": False}
+        )
+
+# 2. Zeile: Bed Occupancy (links) + Avg. Cost (rechts)
+left2, right2 = st.columns(2, gap="medium")
+with left2:
+    st.markdown("**Total Bed Occupancy over Time (Dec 2024 – Dec 2025)**")
+    with st.container(border=True):
+        fig_bed = bed_occupancy_area_chart(df_sim)
+        st.plotly_chart(
+            fig_bed,
+            use_container_width=True,
+            config={"displayModeBar": False}
+        )
+
 
 with col3:
     with st.container(border=True):
