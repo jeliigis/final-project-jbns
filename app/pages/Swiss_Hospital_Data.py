@@ -226,6 +226,9 @@ with tab3:
         df_health_reg["Beds_Total_General"]
     df_health_reg["examinations_per_device"] = df_health_reg["Total Examinations"] / \
         df_health_reg["Total Devices"]
+    
+    ### generating a list for regions so we can use it for coloring the datapoint
+    regions = df_health_reg["Region"].unique()
 
     # nur sinnvolle Zeilen behalten / with the help of AI
     df_health_reg = df_health_reg.replace([np.inf, -np.inf], np.nan).dropna()
@@ -243,8 +246,11 @@ with tab3:
     df_health_reg["Regression_nurses"] = model_1.predict(X1)
 
     plt.figure()
-    plt.scatter(df_health_reg["nurses_per_bed"],
-                df_health_reg["cost_per_bedday"], label="Data")
+
+    for r in regions:
+        subset = df_health_reg[df_health_reg["Region"] == r]
+        plt.scatter(subset["nurses_per_bed"], subset["cost_per_bedday"], label="Data")
+
     plt.plot(df_health_reg["nurses_per_bed"],
              df_health_reg["Regression_nurses"], label="Regression", color="magenta")
     plt.xlabel("Nurses per bed")
