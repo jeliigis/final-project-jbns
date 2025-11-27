@@ -235,65 +235,12 @@ with tab3:
     df_health_reg = df_health_reg.replace([np.inf, -np.inf], np.nan).dropna()
     df_health_reg = df_health_reg[df_health_reg["cost_per_bedday"] != 0]
 
-    st.subheader("Linear Regressions")
+    st.title("Linear Regressions")
     st.write("Statistical Measurement with OLS")
 
-    # 1) cost_per_bed ~ nurses_per_bed - with colored regions
-    st.header("Linear Regression: Cost per Bed Day on Beds per Nurse")
-    X1 = df_health_reg[["nurses_per_bed"]]   # 2D
-    y1 = df_health_reg["cost_per_bedday"]       # 1D
-
-    model_1 = LinearRegression().fit(X1, y1)
-    df_health_reg["Regression_nurses"] = model_1.predict(X1)
-
-    plt.figure()
-
-    for r in regions:
-        subset_regions = df_health_reg[df_health_reg["Region"] == r]
-        plt.scatter(subset_regions["nurses_per_bed"],
-                    subset_regions["cost_per_bedday"], label = r)
-
-    plt.plot(df_health_reg["nurses_per_bed"],
-             df_health_reg["Regression_nurses"], label="Regression", color="magenta")
-    plt.xlabel("Nurses per bed")
-    plt.ylabel("Cost per bedday")
-    plt.legend(title = "Region", bbox_to_anchor = (-0.55, 1), loc = "upper left")
-    st.pyplot(plt)
-
-    # coloring in the years
-    st.header("Linear Regression: Cost per Bed Day on Beds per Nurse")
-    X1 = df_health_reg[["nurses_per_bed"]]   # 2D
-    y1 = df_health_reg["cost_per_bedday"]       # 1D
-
-    model_1 = LinearRegression().fit(X1, y1)
-    df_health_reg["Regression_nurses"] = model_1.predict(X1)
-
-    plt.figure()
-
-    for t in time:
-        subset_time = df_health_reg[df_health_reg["Year"] == t]
-        plt.scatter(subset_time["nurses_per_bed"],
-                    subset_time["cost_per_bedday"], label= t)
-
-    plt.plot(df_health_reg["nurses_per_bed"],
-             df_health_reg["Regression_nurses"], label="Regression", color="magenta")
-    plt.xlabel("Nurses per bed")
-    plt.ylabel("Cost per bedday")
-    plt.legend(title = "Year", bbox_to_anchor = (-0.55, 1), loc = "upper left")
-    st.pyplot(plt)
-
-    # 1.2) adding some statistical key figures
-    X1 = sm.add_constant(X1)
-    model_1_2 = sm.OLS(y1, X1).fit()
-
-    st.write("Slope:", round(model_1_2.params["nurses_per_bed"], 2))
-    st.write("Std. Error:", round(model_1_2.bse["nurses_per_bed"], 2))
-    st.write("P-value:", round(model_1_2.pvalues[1], 2))
-    st.write("R^2:", round(model_1_2.rsquared, 2))
-
-    # 2) cost per beddays - nurses per bed (with two way FE)
-    st.header(
-        "Two-Way Fixed Effects: Cost per Bedday on Beds per Nurse (Region + Year)")
+     # 1) cost per beddays - nurses per bed (with two way FE)
+    st.header("Cost per Bedday on Beds per Nurse")
+    st.subheader("Two-Way Fixed Effects: Cost per Bedday on Beds per Nurse (Region + Year)")
 
     # generate a new dataset were we have the demeaned data to have a bit more overview
     df_fe = df_health_reg.copy()
@@ -338,14 +285,14 @@ with tab3:
     plt.scatter(df_fe_clean_1["nurses_dd"], df_fe_clean_1["cost_dd"],
                 label="Data (within Region & Year)")
     plt.plot(df_fe_clean_1["nurses_dd"], df_fe_clean_1["regline_dd"],
-             label="Two-Way FE Regression", color="magenta")
+             label="Two-Way FE Regression", color="red")
     plt.xlabel("Nurses per Bed (within Region & Year)")
     plt.ylabel("Cost per Bedday (within Region & Year)")
     plt.legend()
 
     st.pyplot(plt)
 
-    # 2.2) adding some statistical key figures
+    # 1.2) adding some statistical key figures
     X2 = sm.add_constant(X2)
     model_fe_clean_1 = sm.OLS(y2, X2).fit()
 
@@ -354,62 +301,62 @@ with tab3:
     st.write("P-value:", round(model_fe_clean_1.pvalues[1], 2))
     st.write("R^2:", round(model_fe_clean_1.rsquared, 2))
 
-    # 3) cost_per_bed ~ Bed_Occupancy_General
-    st.header("Linear Regression: Cost per Bedday on Average occupied Beddays")
+    # 2) cost_per_bed ~ nurses_per_bed - with colored regions
+    st.subheader("Linear Regression: Cost per Bed Day on Beds per Nurse")
+    X1 = df_health_reg[["nurses_per_bed"]]   # 2D
+    y1 = df_health_reg["cost_per_bedday"]       # 1D
 
-    # WICHTIG: X als 2D-DataFrame
-    X3 = df_health_reg[["Avg_Days_Occ"]]
-    y3 = df_health_reg["cost_per_bedday"]
-
-    model_2 = LinearRegression().fit(X3, y3)
-    df_health_reg["Regression_occupancy"] = model_2.predict(X3)
+    model_1 = LinearRegression().fit(X1, y1)
+    df_health_reg["Regression_nurses"] = model_1.predict(X1)
 
     plt.figure()
+
     for r in regions:
         subset_regions = df_health_reg[df_health_reg["Region"] == r]
-        plt.scatter(subset_regions["Avg_Days_Occ"],
+        plt.scatter(subset_regions["nurses_per_bed"],
                     subset_regions["cost_per_bedday"], label = r)
-    plt.plot(df_health_reg["Avg_Days_Occ"],
-             df_health_reg["Regression_occupancy"], label="Regression", color="magenta")
-    plt.xlabel("Avg. Days Occ")
+
+    plt.plot(df_health_reg["nurses_per_bed"],
+             df_health_reg["Regression_nurses"], label="Regression", color="red")
+    plt.xlabel("Nurses per bed")
     plt.ylabel("Cost per bedday")
     plt.legend(title = "Region", bbox_to_anchor = (-0.55, 1), loc = "upper left")
     st.pyplot(plt)
 
-    # 3) cost_per_bed ~ Bed_Occupancy_General
-    st.header("Linear Regression: Cost per Bedday on Average occupied Beddays")
+    # coloring in the years
+    st.subheader("Linear Regression: Cost per Bed Day on Beds per Nurse")
+    X1 = df_health_reg[["nurses_per_bed"]]   # 2D
+    y1 = df_health_reg["cost_per_bedday"]       # 1D
 
-    # WICHTIG: X als 2D-DataFrame
-    X3 = df_health_reg[["Avg_Days_Occ"]]
-    y3 = df_health_reg["cost_per_bedday"]
-
-    model_2 = LinearRegression().fit(X3, y3)
-    df_health_reg["Regression_occupancy"] = model_2.predict(X3)
+    model_1 = LinearRegression().fit(X1, y1)
+    df_health_reg["Regression_nurses"] = model_1.predict(X1)
 
     plt.figure()
+
     for t in time:
         subset_time = df_health_reg[df_health_reg["Year"] == t]
-        plt.scatter(subset_time["Avg_Days_Occ"],
-                    subset_time["cost_per_bedday"], label = t)
-    plt.plot(df_health_reg["Avg_Days_Occ"],
-             df_health_reg["Regression_occupancy"], label="Regression", color="magenta")
-    plt.xlabel("Avg. Days Occ")
+        plt.scatter(subset_time["nurses_per_bed"],
+                    subset_time["cost_per_bedday"], label= t)
+
+    plt.plot(df_health_reg["nurses_per_bed"],
+             df_health_reg["Regression_nurses"], label="Regression", color="red")
+    plt.xlabel("Nurses per bed")
     plt.ylabel("Cost per bedday")
-    plt.legend(title = "Time", bbox_to_anchor = (0.5, -0.15), loc = "upper center", ncol = 8)
+    plt.legend(title = "Year", bbox_to_anchor = (-0.55, 1), loc = "upper left")
     st.pyplot(plt)
 
-    # 3.2) adding some statistical key figures
-    X3 = sm.add_constant(X3)
-    model_3_2 = sm.OLS(y3, X3).fit()
+    # 1.2) adding some statistical key figures
+    X1 = sm.add_constant(X1)
+    model_1_2 = sm.OLS(y1, X1).fit()
 
-    st.write("Slope:", round(model_3_2.params["Avg_Days_Occ"], 2))
-    st.write("Std. Error:", round(model_3_2.bse["Avg_Days_Occ"], 2))
-    st.write("P-value:", round(model_3_2.pvalues[1], 2))
-    st.write("R^2:", round(model_3_2.rsquared, 2))
+    st.write("Slope:", round(model_1_2.params["nurses_per_bed"], 2))
+    st.write("Std. Error:", round(model_1_2.bse["nurses_per_bed"], 2))
+    st.write("P-value:", round(model_1_2.pvalues[1], 2))
+    st.write("R^2:", round(model_1_2.rsquared, 2))
 
-    # 4) cost per beddays - nurses per bed (with two way FE)
-    st.header(
-        "Two-Way Fixed Effects: Cost per Bedday on Average occupied Beddays (Region + Year)")
+# 3) cost per beddays - nurses per bed (with two way FE)
+    st.header("Cost per Bedday on Average occupied Beddays")
+    st.subheader("Two-Way Fixed Effects: Cost per Bedday on Average occupied Beddays (Region + Year)")
 
     # generate a new dataset were we have the demeaned data to have a bit more overview
     df_fe_2 = df_health_reg.copy()
@@ -458,14 +405,14 @@ with tab3:
     plt.scatter(df_fe_clean_2["days_dd"], df_fe_clean_2["cost_dd"],
                 label="Data (within Region & Year)")
     plt.plot(df_fe_clean_2["days_dd"], df_fe_clean_2["regline_dd"],
-             label="Two-Way FE Regression", color="magenta")
+             label="Two-Way FE Regression", color="red")
     plt.xlabel("Avg. Beddays (within Region & Year)")
     plt.ylabel("Cost per Bedday (within Region & Year)")
-    plt.legend(title = "Year", bbox_to_anchor = (-0.55, 1), loc = "upper left")
+    plt.legend()
 
     st.pyplot(plt)
 
-    # 4.2) adding some statistical key figures
+    # 3.2) adding some statistical key figures
     Xc2 = sm.add_constant(Xc2)
     model_fe_clean_2 = sm.OLS(yc2, Xc2).fit()
 
@@ -473,6 +420,59 @@ with tab3:
     st.write("Std. Error:", round(model_fe_clean_2.bse["days_dd"], 2))
     st.write("P-value:", round(model_fe_clean_2.pvalues[1], 2))
     st.write("R^2:", round(model_fe_clean_2.rsquared, 2))
+
+    #4.3) Days occupied on cost per bedday region effects
+    st.subheader("Linear Regression: Cost per Bedday on Average occupied Beddays")
+
+    # WICHTIG: X als 2D-DataFrame
+    X3 = df_health_reg[["Avg_Days_Occ"]]
+    y3 = df_health_reg["cost_per_bedday"]
+
+    model_2 = LinearRegression().fit(X3, y3)
+    df_health_reg["Regression_occupancy"] = model_2.predict(X3)
+
+    plt.figure()
+    for r in regions:
+        subset_regions = df_health_reg[df_health_reg["Region"] == r]
+        plt.scatter(subset_regions["Avg_Days_Occ"],
+                    subset_regions["cost_per_bedday"], label = r)
+    plt.plot(df_health_reg["Avg_Days_Occ"],
+             df_health_reg["Regression_occupancy"], label="Regression", color="red")
+    plt.xlabel("Avg. Days Occ")
+    plt.ylabel("Cost per bedday")
+    plt.legend(title = "Region", bbox_to_anchor = (-0.55, 1), loc = "upper left")
+    st.pyplot(plt)
+    
+
+    ### 4.3) days occupied on cost with time effects
+    st.subheader("Linear Regression: Cost per Bedday on Average occupied Beddays")
+    # WICHTIG: X als 2D-DataFrame
+    X3 = df_health_reg[["Avg_Days_Occ"]]
+    y3 = df_health_reg["cost_per_bedday"]
+
+    model_2 = LinearRegression().fit(X3, y3)
+    df_health_reg["Regression_occupancy"] = model_2.predict(X3)
+
+    plt.figure()
+    for t in time:
+        subset_time = df_health_reg[df_health_reg["Year"] == t]
+        plt.scatter(subset_time["Avg_Days_Occ"],
+                    subset_time["cost_per_bedday"], label = t)
+    plt.plot(df_health_reg["Avg_Days_Occ"],
+             df_health_reg["Regression_occupancy"], label="Regression", color="red")
+    plt.xlabel("Avg. Days Occ")
+    plt.ylabel("Cost per bedday")
+    plt.legend(title = "Year", bbox_to_anchor = (-0.55, 1), loc = "upper left")
+    st.pyplot(plt)
+
+    # 3.2) adding some statistical key figures
+    X3 = sm.add_constant(X3)
+    model_3_2 = sm.OLS(y3, X3).fit()
+
+    st.write("Slope:", round(model_3_2.params["Avg_Days_Occ"], 2))
+    st.write("Std. Error:", round(model_3_2.bse["Avg_Days_Occ"], 2))
+    st.write("P-value:", round(model_3_2.pvalues[1], 2))
+    st.write("R^2:", round(model_3_2.rsquared, 2))
 
 
 with tab4:
