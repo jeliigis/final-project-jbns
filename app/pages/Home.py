@@ -53,16 +53,48 @@ col_left, col_right = st.columns(2, gap="large")
 with col_left:
     with st.container(border=True):
         st.subheader("🔍 Our Guiding Questions")
-        st.write(
-            """
-1. **How have the number of hospitals and beds changed** in light of demographic developments?  
-2. **What drives rising costs** in the Swiss hospital system?  
-   • How do **staffing levels** and **bed occupancy** influence efficiency?  
-3. **How do the major regions differ** in their hospital structures and capacities?  
-4. **What impact did the 2020 pandemic** have on the hospital system?  
-5. **Which key indicators can help hospitals** plan resources more efficiently?  
-            """
-        )
+
+        # Die 5 Leitfragen (kurz & klar)
+
+        st.markdown("**Quick Insights:**")
+
+        with st.expander("1) How have hospitals and beds changed?"):
+            st.write(
+                "In our data, the **number of hospitals decreases over time**, "
+                "while the **total number of beds declines more moderately**. "
+                "This points to consolidation of hospital sites with slightly higher "
+                "bed capacity per remaining hospital."
+            )
+
+        with st.expander("2) What drives rising hospital costs?"):
+            st.write(
+                "Costs increase mainly due to **higher staff expenses** "
+                "In the regression graph, it can be shown that as the number of nursing staff per bed increases, the costs per patient day also increase. "
+
+            )
+
+        with st.expander("3) How do the regions differ structurally?"):
+            st.write(
+                "The regional comparison shows clear **differences in examinations/device-rate, "
+                "and beds/staff-rate**. "
+                "We visualize that **regional differences** exist in terms of **costs per patient day"
+                "despite the same nurse-to-bed ratio**."
+            )
+
+        with st.expander("4) What impact had the 2020 global pandemic?"):
+            st.write(
+                "In 2020, contrary to the trend, we are seeing a slight **increase in hospital locations**."
+                "We also have a **high acquisition rate** for medical equipment."
+                "The costs are in line with the upward trend."
+            )
+
+        with st.expander("5) Which key indicators improve hospital planning?"):
+            st.write(
+                "The sample hospital dashboard highlights key indices such as **bed occupancy per department**, "
+                "**employment growth**, **patient composition** and **average treatment cost per patient**. "
+                "Together, these indicators may support more resource-efficient planning and capacity management."
+            )
+
 
 # Box 2: Overview
 with col_right:
@@ -75,7 +107,6 @@ Explore national trends from 2010–2023: beds, staff, occupancy, costs and regi
 
 **Sample Hospital Dashboard**  
 A simulated hospital view with internal key indices: bed occupancy, staffing mix, patient composition and cost metrics.
-The data for this Dashboard was synthetically generated and therefore not inteded as a numerical interpretation.
             """)
 
 st.write("")  # space
