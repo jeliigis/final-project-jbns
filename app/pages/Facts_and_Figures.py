@@ -306,6 +306,16 @@ with tab3:
     st.write("P-value:", round(model_fe_clean_2.pvalues[1], 2))
     st.write("R^2:", round(model_fe_clean_2.rsquared, 2))
 
+    ###adding a description
+    st.markdown("In this Regression we demeaned the data due to possible influence of region or time fixed effects. " 
+    "The model indicates a small negative relationship between bed occupancy and cost per patient day. An increase of one "
+    "day in bed occupancy suggests a decrease in cost per patient day of CHF -3.94. What might sound small at first, would lead "
+    "to possible cost savings of around CHF 104 Mio. per year in Switzerland, if the average bed occupancy would increase by 1%. "
+    "This corresponds to relative cost savings of around 0.4% for every percentage point increase in utilisation, based on the total costs of general hospitals in Switzerland. "
+    "However, the effect is only marginally stastically significant (p = 0.06) and explains little of the variation (R^2 = 0.05). "
+    "Furthermore it is important that the relationship shouldn't be interpreted as strictly linear. Efficiency gains from higher occupancy are likely to fade away at higher capacity levels "
+    "and may even rise above possible congestion thresholds.")
+
     ##2) Days occupied on cost per Bed Day
     #2.1) Days occupied on cost per bedday region effects
     st.subheader("Linear Regression: Cost per Patient Day on Average occupied Bed Days")
