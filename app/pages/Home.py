@@ -8,6 +8,7 @@ st.set_page_config(
     page_icon="🏥",
     layout="wide")
 
+
 HERE = Path(__file__).resolve().parent
 HERO_IMG = HERE.parent.parent / "images" / "hospital.jpg"
 
@@ -31,36 +32,69 @@ st.markdown(
         </a>
     </div>
     """,
-    unsafe_allow_html=True
-)
+    unsafe_allow_html=True)
 
 
-st.title("Switzerland's Hospital System: Between Performance and Bottleneck")
-st.subheader("Did you know that despite demographic change and the resulting increase in demand for staff in our healthcare system, the number of hospitals and beds has decreased in recent years? "
-             "That there are significant regional differences in the efficiency of medical device usage? ")
+# Text
 
-st.write("In our Streamlit web app, we focus on two main areas of content: "
-         "Under *Swiss Hospital Data*, you will find visualizations and statistical tools designed to shed light on Swiss hospitals in retrospect.  The data set is based on data provided by the Federal Statistical Office and covers the years 2010–2023. "
-         "Secondly, we have used a *dashboard* to simulate a Swiss hospital, illustrating the most important key figures and implementing some resulting diagrams. "
-         "Although the content of this dashboard cannot be interpreted, it is intended to highlight mechanisms that would make it easier for hospitals to plan for the future in order to save costs.")
+st.title("Behind the Numbers: A Data Story About Switzerland’s Hospitals")
 
-# Buttons
-col8, col9 = st.columns(2)
+st.markdown(
+    "Switzerland’s healthcare landscape is changing — fewer hospitals, rising costs, "
+    "and significant regional differences. Our analysis explores what the data reveals "
+    "about capacity, efficiency, and the pressures shaping today’s hospital system.")
 
-with col8:
-    btn_data = st.button("➡️ Explore Facts and Figures about Swiss Hospitals")
+st.write("")  # small space
 
-with col8:
-    btn_dash = st.button("➡️ Explore Dashboard for Sample Hospital")
+# creating to boxes
+col_left, col_right = st.columns(2, gap="large")
 
-if btn_data:
-    st.switch_page("pages/Facts_and_Figures.py")
+# Box 1: Research Questions
+with col_left:
+    with st.container(border=True):
+        st.subheader("🔍 Our Guiding Questions")
+        st.write(
+            """
+1. **How have the number of hospitals and beds changed** in light of demographic developments?  
+2. **What drives rising costs** in the Swiss hospital system?  
+   • How do **staffing levels** and **bed occupancy** influence efficiency?  
+3. **How do the major regions differ** in their hospital structures and capacities?  
+4. **What impact did the 2020 pandemic** have on the hospital system?  
+5. **Which key indicators can help hospitals** plan resources more efficiently?  
+            """
+        )
 
-if btn_dash:
-    st.switch_page("pages/Dashboard_for_Sample_Hospital.py")
+# Box 2: Overview
+with col_right:
+    with st.container(border=True):
+        st.subheader("🧭 How to Navigate This App")
+        st.write(
+            """
+**Swiss Hospital Data**  
+Explore national trends from 2010–2023: beds, staff, occupancy, costs and regional differences.
 
-# About us
-st.subheader("About us")
-st.markdown("We are Jeremy and Jelena, economics students at UZH. As a part of a module in our bachelors degree program, we examined "
-            "health data from Swiss hospitals over the last decade. We are both completely newbies in programming and data analysis but this project is just "
-            "the start of some further projects. Hopefully : )")
+**Sample Hospital Dashboard**  
+A simulated hospital view with internal key indices: bed occupancy, staffing mix, patient composition and cost metrics.
+The data for this Dashboard was synthetically generated and therefore not inteded as a numerical interpretation.
+            """)
+
+st.write("")  # space
+
+# Box 3: Navigation
+with st.container(border=True):
+    st.subheader("🚀 Start Exploring")
+
+    col8, col9 = st.columns(2)
+
+    with col8:
+        btn_data = st.button(
+            "➡️ Explore Facts and Figures about Swiss Hospitals")
+
+    with col9:
+        btn_dash = st.button("➡️ Explore Dashboard for Sample Hospital")
+
+    if btn_data:
+        st.switch_page("pages/Facts_and_Figures.py")
+
+    if btn_dash:
+        st.switch_page("pages/Dashboard_for_Sample_Hospital.py")

@@ -320,13 +320,14 @@ with tab3:
     plt.figure()
     for r in regions:
         subset_regions = df_health_reg[df_health_reg["Region"] == r]
-        plt.scatter(subset_regions["Avg_Days_Occ"],
-                    subset_regions["cost_per_bedday"], label = r)
-    plt.plot(df_health_reg["Avg_Days_Occ"],
-             df_health_reg["Regression_occupancy"], label="Regression", color="red")
-    plt.xlabel("Avg. Days Occ")
-    plt.ylabel("Cost per Patient Day")
-    plt.legend(title = "Region", bbox_to_anchor = (-0.55, 1), loc = "upper left")
+        plt.scatter(subset_regions["nurses_per_bed"],
+                    subset_regions["cost_per_bedday"], label=r)
+
+    plt.plot(df_health_reg["nurses_per_bed"],
+             df_health_reg["Regression_nurses"], label="Regression", color="magenta")
+    plt.xlabel("Nurses per bed")
+    plt.ylabel("Cost per bedday")
+    plt.legend(title="Region", bbox_to_anchor=(-0.55, 1), loc="upper left")
     st.pyplot(plt)
     
 
@@ -342,13 +343,14 @@ with tab3:
     plt.figure()
     for t in time:
         subset_time = df_health_reg[df_health_reg["Year"] == t]
-        plt.scatter(subset_time["Avg_Days_Occ"],
-                    subset_time["cost_per_bedday"], label = t)
-    plt.plot(df_health_reg["Avg_Days_Occ"],
-             df_health_reg["Regression_occupancy"], label="Regression", color="red")
-    plt.xlabel("Avg. Days Occ")
-    plt.ylabel("Cost per Patient Day")
-    plt.legend(title = "Year", bbox_to_anchor = (-0.55, 1), loc = "upper left")
+        plt.scatter(subset_time["nurses_per_bed"],
+                    subset_time["cost_per_bedday"], label=t)
+
+    plt.plot(df_health_reg["nurses_per_bed"],
+             df_health_reg["Regression_nurses"], label="Regression", color="magenta")
+    plt.xlabel("Nurses per bed")
+    plt.ylabel("Cost per bedday")
+    plt.legend(title="Year", bbox_to_anchor=(-0.55, 1), loc="upper left")
     st.pyplot(plt)
 
     # 3.2) adding some statistical key figures
@@ -435,14 +437,13 @@ with tab3:
 
     for r in regions:
         subset_regions = df_health_reg[df_health_reg["Region"] == r]
-        plt.scatter(subset_regions["nurses_per_bed"],
-                    subset_regions["cost_per_bedday"], label = r)
-
-    plt.plot(df_health_reg["nurses_per_bed"],
-             df_health_reg["Regression_nurses"], label="Regression", color="red")
-    plt.xlabel("Nurses per bed")
-    plt.ylabel("Cost per Patient Day")
-    plt.legend(title = "Region", bbox_to_anchor = (-0.55, 1), loc = "upper left")
+        plt.scatter(subset_regions["Avg_Days_Occ"],
+                    subset_regions["cost_per_bedday"], label=r)
+    plt.plot(df_health_reg["Avg_Days_Occ"],
+             df_health_reg["Regression_occupancy"], label="Regression", color="magenta")
+    plt.xlabel("Avg. Days Occ")
+    plt.ylabel("Cost per bedday")
+    plt.legend(title="Region", bbox_to_anchor=(-0.55, 1), loc="upper left")
     st.pyplot(plt)
 
     # coloring in the years
@@ -457,14 +458,83 @@ with tab3:
 
     for t in time:
         subset_time = df_health_reg[df_health_reg["Year"] == t]
-        plt.scatter(subset_time["nurses_per_bed"],
-                    subset_time["cost_per_bedday"], label= t)
+        plt.scatter(subset_time["Avg_Days_Occ"],
+                    subset_time["cost_per_bedday"], label=t)
+    plt.plot(df_health_reg["Avg_Days_Occ"],
+             df_health_reg["Regression_occupancy"], label="Regression", color="magenta")
+    plt.xlabel("Avg. Days Occ")
+    plt.ylabel("Cost per bedday")
+    plt.legend(title="Time", bbox_to_anchor=(
+        0.5, -0.15), loc="upper center", ncol=8)
+    st.pyplot(plt)
 
-    plt.plot(df_health_reg["nurses_per_bed"],
-             df_health_reg["Regression_nurses"], label="Regression", color="red")
-    plt.xlabel("Nurses per bed")
-    plt.ylabel("Cost per Patient Day")
-    plt.legend(title = "Year", bbox_to_anchor = (-0.55, 1), loc = "upper left")
+    # 3.2) adding some statistical key figures
+    X3 = sm.add_constant(X3)
+    model_3_2 = sm.OLS(y3, X3).fit()
+
+    st.write("Slope:", round(model_3_2.params["Avg_Days_Occ"], 2))
+    st.write("Std. Error:", round(model_3_2.bse["Avg_Days_Occ"], 2))
+    st.write("P-value:", round(model_3_2.pvalues[1], 2))
+    st.write("R^2:", round(model_3_2.rsquared, 2))
+
+    # 4) cost per beddays - nurses per bed (with two way FE)
+    st.header(
+        "Two-Way Fixed Effects: Cost per Bedday on Average occupied Beddays (Region + Year)")
+
+    # generate a new dataset were we have the demeaned data to have a bit more overview
+    df_fe_2 = df_health_reg.copy()
+
+    # calculate the mean in general
+    mean_days_occ = df_fe_2["Avg_Days_Occ"].mean()
+    mean_cost = df_fe_2["cost_per_bedday"].mean()
+
+    # demean year and regions / used a bit help of AI with .transform
+    region_mean_days_occ = df_fe_2.groupby(
+        "Region")["Avg_Days_Occ"].transform("mean")
+    year_mean_days_occ = df_fe_2.groupby(
+        "Year")["Avg_Days_Occ"].transform("mean")
+
+    region_mean_cost = df_fe_2.groupby(
+        "Region")["cost_per_bedday"].transform("mean")
+    year_mean_cost = df_fe_2.groupby(
+        "Year")["cost_per_bedday"].transform("mean")
+
+    # generate the new datapoints by using double demeaning (thanks to ronak jain and intermediate econometrics)
+    df_fe_2["days_dd"] = (df_fe_2["Avg_Days_Occ"] -
+                          region_mean_days_occ - year_mean_days_occ + mean_days_occ)
+    df_fe_2["cost_dd"] = (df_fe_2["cost_per_bedday"] -
+                          region_mean_cost - year_mean_cost + mean_cost)
+
+    # #regress and plot as used to above
+    # X4 = df_fe_2[["days_dd"]]
+    # y4 = df_fe_2["cost_dd"]
+
+    # removing influential datapoints in retrospect as the regression had some influential datapoints by looking at the cooks distance
+    # (used AI for the Code, Intution done by ourselves)
+    X4 = sm.add_constant(df_fe_2[["days_dd"]])
+    y4 = df_fe_2["cost_dd"]
+    model_fe_2 = sm.OLS(y4, X4).fit()
+    influence = model_fe_2.get_influence()
+    df_fe_2["cooks_d2"] = influence.cooks_distance[0]
+    # using just the 4/n rule for the definition of outliers
+    threshold = 4 / len(df_fe_2)
+    df_fe_clean_2 = df_fe_2[df_fe_2["cooks_d2"] < threshold]
+
+    Xc2 = sm.add_constant(df_fe_clean_2[["days_dd"]])
+    yc2 = df_fe_clean_2["cost_dd"]
+    model_fe_clean_2 = LinearRegression().fit(Xc2, yc2)
+    df_fe_clean_2["regline_dd"] = model_fe_clean_2.predict(Xc2)
+
+    # plotting as used to
+    plt.figure()
+    plt.scatter(df_fe_clean_2["days_dd"], df_fe_clean_2["cost_dd"],
+                label="Data (within Region & Year)")
+    plt.plot(df_fe_clean_2["days_dd"], df_fe_clean_2["regline_dd"],
+             label="Two-Way FE Regression", color="magenta")
+    plt.xlabel("Avg. Beddays (within Region & Year)")
+    plt.ylabel("Cost per Bedday (within Region & Year)")
+    plt.legend(title="Year", bbox_to_anchor=(-0.55, 1), loc="upper left")
+
     st.pyplot(plt)
 
     # 4.2) adding some statistical key figures
