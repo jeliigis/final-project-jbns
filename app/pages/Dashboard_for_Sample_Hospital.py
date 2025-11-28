@@ -15,7 +15,7 @@ st.set_page_config(
 # content
 st.title("Switzerland's Hospital System: Between Performance and Bottleneck")
 st.markdown(
-    "🔎 Discover how a figurative Swiss hospital could potentially look like and its kpi's development.")
+    "🔎 Discover a Prototype of a Swiss hospital Dashboard and the key indicators that can improve hospital planning")
 st.write("This dashboard was created to display various measurements and illustrations relating to a hospital. "
          "The data was generated synthetically and is not intended to be interpreted in terms of content.")
 

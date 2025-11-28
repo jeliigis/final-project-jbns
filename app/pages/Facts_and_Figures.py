@@ -66,7 +66,7 @@ with tab1:
     st.bar_chart(df_staff_ch_indexed["Staff_Total"])
     st.caption("_x-axis = Year, y-axis = Numbers of full-time-equivalent staff_")
     st.write("The graphic shows the development of staff employed in acute treatment in Swiss hospitals between 2010 and 2023. "
-             "The number of full-time equivalent positions has increased steadly over the period, reflecting a growth of about + 30.9 %. "
+             "The number of full-time equivalent positions has increased steadily over the period, reflecting a growth of about + 30.9 %. "
              "The data highlight the expansion of hospital services and the growing demand for healthcare professionals. ")
 
     # generating a bar plot for the total infrastructure trend over the years
@@ -78,9 +78,9 @@ with tab1:
     df_infrastructure_ch_indexed = df_ch_infrastructure.set_index('Year')
     st.bar_chart(df_infrastructure_ch_indexed["Infrastructure_Total"])
     st.caption("_x-axis = Year, y-axis = Number of Medical Devices_")
-    st.caption("List of relevant Devices: Angiographie, CT Scanner, Dialyse, Gamma Camera, Linear Accelerator,Lithotriptor, MRI,Pet_Scanner")
-    st.write("This graphic presents the development of numbers of available medical devices in acute treatment in Swiss hospitals between 2010 and 2023."
-             "The lates number of total medical devices in Switzerland in 2023 has increased by + 20% since 2013. There were comparatively large increases in 2016 to 2017 and 2017 to 2018. "
+    st.caption("List of relevant Devices: Angiographie, CT Scanner, Dialyse, Gamma Camera, Linear Accelerator, Lithotriptor, MRI, Pet_Scanner")
+    st.write("This graphic presents the development of numbers of available medical devices in acute treatment in Swiss hospitals between 2010 and 2023. "
+             "The latest number of total medical devices in Switzerland in 2023 has increased by + 20% since 2013. There were comparatively large increases in 2016 to 2017 and 2017 to 2018. "
              "The highest acquisition rate is evident in the available data for 2020. While 23 new devices were purchased in the previous year, the corresponding figure for 2020 was 85. "
              "This can be linked to the global pandemic. A year later, the number of new devices purchased fell to a low of 14. ")
     # generating a bar plot for the total of hospital beds trend over the years
@@ -311,8 +311,8 @@ with tab3:
 
     # adding a description
     st.markdown("In this Regression we demeaned the data due to possible influence of region or time fixed effects. "
-                "The model indicates a small negative relationship between bed occupancy and cost per patient day. An increase of one "
-                "day in bed occupancy suggests a decrease in cost per patient day of CHF -3.94. What might sound small at first, would lead "
+                "The model indicates a small negative relationship between Bed Occupancy and Cost per Patient Day. An increase of one "
+                "day in Bed Occupancy suggests a decrease in Cost per Patient Day of CHF -3.94. What might sound small at first, would lead "
                 "to possible cost savings of around CHF 104 Mio. per year in Switzerland, if the average bed occupancy would increase by 1%. "
                 "This corresponds to relative cost savings of around 0.4% for every percentage point increase in utilisation, based on the total costs of general hospitals in Switzerland. "
                 "However, the effect is only marginally stastically significant (p = 0.06) and explains little of the variation (R^2 = 0.05). This shows the need of further analysis which factors drive the costs, such as the use of staff, shown below. "
@@ -376,7 +376,7 @@ with tab3:
 
     ###text to the regression itself
     st.markdown("The raw scatterplots show a negative correlation between bed occupancy and cost per patient day. "
-    "Especially when sorted by regions, we can see a clear a clustering of observations belonging to the same entity. " \
+    "Especially when sorted by regions, we can see a clear clustering of observations belonging to the same entity. " \
     "This suggests that much of the cost variation is driven by structural and temporal differences rather than occupancy alone, indicating a need to control for these effects.")
 
     # 3) cost per beddays - nurses per bed (with two way FE)
@@ -448,7 +448,7 @@ with tab3:
     "The relationship is highly significant and explains around 19% of the variation which is relatively high for cost data but also compared to the bed occupancy mentioned above. "
     "This suggests that extending nursing staff capacity tends to raise the expenditures per Patient Day. Higher staffing levels directly increase costs but are also "
     "likely to be associated with more complex cases that incur higher patient costs. By controlling for region and time we tried to isolate for such effects, but the markably high explanation of the variation opens interest for further review. "
-    "Last but not least, it is not only a question of efficiency and cost-effectiveness, but it is also important to consider the working conditions of the staff when considering any cost-cutting measures.")
+    "Last but not least, it is not only a question of efficiency and cost-effectiveness, but it is also important to review the working conditions of the staff when considering any cost-cutting measures.")
 
     # 4) cost_per_bed ~ nurses_per_bed - with colored regions
     st.subheader("Linear Regression: Cost per Bed Day on Nurses per Bed")
@@ -504,8 +504,8 @@ with tab3:
     st.write("R^2:", round(model_1_2.rsquared, 2))
 
     ###adding a description to the regression
-    st.markdown("The raw scatterplot shows a strong positive correlation between Nurses per Bed and Cost per Patient Day, with a high explanatory power (R^2 = 50). " 
-    "However, as in the first regression, we can see a clear clustering in regions again suggesting that cost differences are driven by structural differences rather than staffing intensity alone. " \
+    st.markdown("The raw scatterplots show a strong positive correlation between Nurses per Bed and Cost per Patient Day, with a high explanatory power (R^2 = 50). " 
+    "However, as in the first regression, we are once again seeing a clear clustering in regions suggesting that cost differences are driven by structural differences rather than staffing intensity alone. " \
     "This motivates the two-way fixed effects regression to isolate the staffing effects more credibly.")
 
 
