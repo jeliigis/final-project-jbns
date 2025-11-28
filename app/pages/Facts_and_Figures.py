@@ -235,19 +235,89 @@ with tab3:
     df_health_reg = df_health_reg.replace([np.inf, -np.inf], np.nan).dropna()
     df_health_reg = df_health_reg[df_health_reg["cost_per_bedday"] != 0]
 
-    st.subheader("Linear Regressions")
+    st.title("Linear Regressions")
     st.write("Statistical Measurement with OLS")
 
-    # 1) cost_per_bed ~ nurses_per_bed - with colored regions
-    st.header("Linear Regression: Cost per Bed Day on Beds per Nurse")
-    X1 = df_health_reg[["nurses_per_bed"]]   # 2D
-    y1 = df_health_reg["cost_per_bedday"]       # 1D
+    
+# 1) cost per beddays - average occupied bed days (with two way FE)
+    st.header("Cost per Patient Day on Average occupied Bed Days")
+    st.subheader("Two-Way Fixed Effects: Cost per Patient Day on Average occupied Bed Days (Region + Year)")
 
-    model_1 = LinearRegression().fit(X1, y1)
-    df_health_reg["Regression_nurses"] = model_1.predict(X1)
+    # generate a new dataset were we have the demeaned data to have a bit more overview
+    df_fe_2 = df_health_reg.copy()
+
+    # calculate the mean in general
+    mean_days_occ = df_fe_2["Avg_Days_Occ"].mean()
+    mean_cost = df_fe_2["cost_per_bedday"].mean()
+
+    # demean year and regions / used a bit help of AI with .transform
+    region_mean_days_occ = df_fe_2.groupby(
+        "Region")["Avg_Days_Occ"].transform("mean")
+    year_mean_days_occ = df_fe_2.groupby(
+        "Year")["Avg_Days_Occ"].transform("mean")
+
+    region_mean_cost = df_fe_2.groupby(
+        "Region")["cost_per_bedday"].transform("mean")
+    year_mean_cost = df_fe_2.groupby(
+        "Year")["cost_per_bedday"].transform("mean")
+
+    # generate the new datapoints by using double demeaning (thanks to ronak jain and intermediate econometrics)
+    df_fe_2["days_dd"] = (df_fe_2["Avg_Days_Occ"] - region_mean_days_occ - year_mean_days_occ + mean_days_occ)
+    df_fe_2["cost_dd"] = (df_fe_2["cost_per_bedday"] - region_mean_cost - year_mean_cost + mean_cost)
+
+    # #regress and plot as used to above
+    # X4 = df_fe_2[["days_dd"]]
+    # y4 = df_fe_2["cost_dd"]
+
+    # removing influential datapoints in retrospect as the regression had some influential datapoints by looking at the cooks distance
+    # (used AI for the Code, Intution done by ourselves)
+    X4 = sm.add_constant(df_fe_2[["days_dd"]])
+    y4 = df_fe_2["cost_dd"]
+    model_fe_2 = sm.OLS(y4, X4).fit()
+    influence = model_fe_2.get_influence()
+    df_fe_2["cooks_d2"] = influence.cooks_distance[0]
+    # using just the 4/n rule for the definition of outliers
+    threshold = 4 / len(df_fe_2)
+    df_fe_clean_2 = df_fe_2[df_fe_2["cooks_d2"] < threshold]
+
+    Xc2 = sm.add_constant(df_fe_clean_2[["days_dd"]])
+    yc2 = df_fe_clean_2["cost_dd"]
+    model_fe_clean_2 = LinearRegression().fit(Xc2, yc2)
+    df_fe_clean_2["regline_dd"] = model_fe_clean_2.predict(Xc2)
+
+    #plotting as used to
+    plt.figure()
+    plt.scatter(df_fe_clean_2["days_dd"], df_fe_clean_2["cost_dd"],
+                label="Observed Values (within Region & Year)")
+    plt.plot(df_fe_clean_2["days_dd"], df_fe_clean_2["regline_dd"],
+             label="Two-Way FE Regression", color="red")
+    plt.xlabel("Avg. Bed Days (within Region & Year)")
+    plt.ylabel("Cost per Patient Day (within Region & Year)")
+    plt.legend()
+
+    st.pyplot(plt)
+
+    # 1.2) adding some statistical key figures
+    Xc2 = sm.add_constant(Xc2)
+    model_fe_clean_2 = sm.OLS(yc2, Xc2).fit()
+
+    st.write("Slope:", round(model_fe_clean_2.params["days_dd"], 2))
+    st.write("Std. Error:", round(model_fe_clean_2.bse["days_dd"], 2))
+    st.write("P-value:", round(model_fe_clean_2.pvalues[1], 2))
+    st.write("R^2:", round(model_fe_clean_2.rsquared, 2))
+
+    ##2) Days occupied on cost per Bed Day
+    #2.1) Days occupied on cost per bedday region effects
+    st.subheader("Linear Regression: Cost per Patient Day on Average occupied Bed Days")
+
+    # WICHTIG: X als 2D-DataFrame
+    X3 = df_health_reg[["Avg_Days_Occ"]]
+    y3 = df_health_reg["cost_per_bedday"]
+
+    model_2 = LinearRegression().fit(X3, y3)
+    df_health_reg["Regression_occupancy"] = model_2.predict(X3)
 
     plt.figure()
-
     for r in regions:
         subset_regions = df_health_reg[df_health_reg["Region"] == r]
         plt.scatter(subset_regions["nurses_per_bed"],
@@ -259,17 +329,18 @@ with tab3:
     plt.ylabel("Cost per bedday")
     plt.legend(title="Region", bbox_to_anchor=(-0.55, 1), loc="upper left")
     st.pyplot(plt)
+    
 
-    # coloring in the years
-    st.header("Linear Regression: Cost per Bed Day on Beds per Nurse")
-    X1 = df_health_reg[["nurses_per_bed"]]   # 2D
-    y1 = df_health_reg["cost_per_bedday"]       # 1D
+    ### 2.3) days occupied on cost with time effects
+    st.subheader("Linear Regression: Cost per Patient Day on Average occupied Bed Days")
+    # WICHTIG: X als 2D-DataFrame
+    X3 = df_health_reg[["Avg_Days_Occ"]]
+    y3 = df_health_reg["cost_per_bedday"]
 
-    model_1 = LinearRegression().fit(X1, y1)
-    df_health_reg["Regression_nurses"] = model_1.predict(X1)
+    model_2 = LinearRegression().fit(X3, y3)
+    df_health_reg["Regression_occupancy"] = model_2.predict(X3)
 
     plt.figure()
-
     for t in time:
         subset_time = df_health_reg[df_health_reg["Year"] == t]
         plt.scatter(subset_time["nurses_per_bed"],
@@ -282,18 +353,18 @@ with tab3:
     plt.legend(title="Year", bbox_to_anchor=(-0.55, 1), loc="upper left")
     st.pyplot(plt)
 
-    # 1.2) adding some statistical key figures
-    X1 = sm.add_constant(X1)
-    model_1_2 = sm.OLS(y1, X1).fit()
+    # 3.2) adding some statistical key figures
+    X3 = sm.add_constant(X3)
+    model_3_2 = sm.OLS(y3, X3).fit()
 
-    st.write("Slope:", round(model_1_2.params["nurses_per_bed"], 2))
-    st.write("Std. Error:", round(model_1_2.bse["nurses_per_bed"], 2))
-    st.write("P-value:", round(model_1_2.pvalues[1], 2))
-    st.write("R^2:", round(model_1_2.rsquared, 2))
+    st.write("Slope:", round(model_3_2.params["Avg_Days_Occ"], 2))
+    st.write("Std. Error:", round(model_3_2.bse["Avg_Days_Occ"], 2))
+    st.write("P-value:", round(model_3_2.pvalues[1], 2))
+    st.write("R^2:", round(model_3_2.rsquared, 2))
 
-    # 2) cost per beddays - nurses per bed (with two way FE)
-    st.header(
-        "Two-Way Fixed Effects: Cost per Bedday on Beds per Nurse (Region + Year)")
+    # 3) cost per beddays - nurses per bed (with two way FE)
+    st.header("Cost per Patient Day on Beds per Nurse")
+    st.subheader("Two-Way Fixed Effects: Cost per Patient Day on Beds per Nurse (Region + Year)")
 
     # generate a new dataset were we have the demeaned data to have a bit more overview
     df_fe = df_health_reg.copy()
@@ -336,16 +407,16 @@ with tab3:
 
     plt.figure()
     plt.scatter(df_fe_clean_1["nurses_dd"], df_fe_clean_1["cost_dd"],
-                label="Data (within Region & Year)")
+                label="Observed Values (within Region & Year)")
     plt.plot(df_fe_clean_1["nurses_dd"], df_fe_clean_1["regline_dd"],
-             label="Two-Way FE Regression", color="magenta")
+             label="Two-Way FE Regression", color="red")
     plt.xlabel("Nurses per Bed (within Region & Year)")
-    plt.ylabel("Cost per Bedday (within Region & Year)")
+    plt.ylabel("Cost per Patient Day (within Region & Year)")
     plt.legend()
 
     st.pyplot(plt)
 
-    # 2.2) adding some statistical key figures
+    # 3.2) adding some statistical key figures
     X2 = sm.add_constant(X2)
     model_fe_clean_1 = sm.OLS(y2, X2).fit()
 
@@ -354,17 +425,16 @@ with tab3:
     st.write("P-value:", round(model_fe_clean_1.pvalues[1], 2))
     st.write("R^2:", round(model_fe_clean_1.rsquared, 2))
 
-    # 3) cost_per_bed ~ Bed_Occupancy_General
-    st.header("Linear Regression: Cost per Bedday on Average occupied Beddays")
+    # 4) cost_per_bed ~ nurses_per_bed - with colored regions
+    st.subheader("Linear Regression: Cost per Bed Day on Beds per Nurse")
+    X1 = df_health_reg[["nurses_per_bed"]]   # 2D
+    y1 = df_health_reg["cost_per_bedday"]       # 1D
 
-    # WICHTIG: X als 2D-DataFrame
-    X3 = df_health_reg[["Avg_Days_Occ"]]
-    y3 = df_health_reg["cost_per_bedday"]
-
-    model_2 = LinearRegression().fit(X3, y3)
-    df_health_reg["Regression_occupancy"] = model_2.predict(X3)
+    model_1 = LinearRegression().fit(X1, y1)
+    df_health_reg["Regression_nurses"] = model_1.predict(X1)
 
     plt.figure()
+
     for r in regions:
         subset_regions = df_health_reg[df_health_reg["Region"] == r]
         plt.scatter(subset_regions["Avg_Days_Occ"],
@@ -376,17 +446,16 @@ with tab3:
     plt.legend(title="Region", bbox_to_anchor=(-0.55, 1), loc="upper left")
     st.pyplot(plt)
 
-    # 3) cost_per_bed ~ Bed_Occupancy_General
-    st.header("Linear Regression: Cost per Bedday on Average occupied Beddays")
+    # coloring in the years
+    st.subheader("Linear Regression: Cost per Bed Day on Beds per Nurse")
+    X1 = df_health_reg[["nurses_per_bed"]]   # 2D
+    y1 = df_health_reg["cost_per_bedday"]       # 1D
 
-    # WICHTIG: X als 2D-DataFrame
-    X3 = df_health_reg[["Avg_Days_Occ"]]
-    y3 = df_health_reg["cost_per_bedday"]
-
-    model_2 = LinearRegression().fit(X3, y3)
-    df_health_reg["Regression_occupancy"] = model_2.predict(X3)
+    model_1 = LinearRegression().fit(X1, y1)
+    df_health_reg["Regression_nurses"] = model_1.predict(X1)
 
     plt.figure()
+
     for t in time:
         subset_time = df_health_reg[df_health_reg["Year"] == t]
         plt.scatter(subset_time["Avg_Days_Occ"],
@@ -469,13 +538,13 @@ with tab3:
     st.pyplot(plt)
 
     # 4.2) adding some statistical key figures
-    Xc2 = sm.add_constant(Xc2)
-    model_fe_clean_2 = sm.OLS(yc2, Xc2).fit()
+    X1 = sm.add_constant(X1)
+    model_1_2 = sm.OLS(y1, X1).fit()
 
-    st.write("Slope:", round(model_fe_clean_2.params["days_dd"], 2))
-    st.write("Std. Error:", round(model_fe_clean_2.bse["days_dd"], 2))
-    st.write("P-value:", round(model_fe_clean_2.pvalues[1], 2))
-    st.write("R^2:", round(model_fe_clean_2.rsquared, 2))
+    st.write("Slope:", round(model_1_2.params["nurses_per_bed"], 2))
+    st.write("Std. Error:", round(model_1_2.bse["nurses_per_bed"], 2))
+    st.write("P-value:", round(model_1_2.pvalues[1], 2))
+    st.write("R^2:", round(model_1_2.rsquared, 2))
 
 
 with tab4:
