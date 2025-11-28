@@ -770,3 +770,8 @@ with col3:
             fig_gauge,
             use_container_width=True,
             config={"displayModeBar": False})
+
+
+btn_home = st.button("➡️ Go back to Home")
+if btn_home:
+    st.switch_page("pages/Home.py")

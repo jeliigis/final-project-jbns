@@ -3,6 +3,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 
+# -----------------------------
+st.markdown("""
+<style>
+[data-testid="stSidebar"] {
+    background-color: #68838B !important;   /* optional Sidebar-Farbe */
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 Home = st.Page("pages/Home.py")
 Facts_and_Figures = st.Page(
     "pages/Facts_and_Figures.py")
