@@ -14,7 +14,7 @@ HERO_IMG = HERE.parent.parent / "images" / "hospital.jpg"
 
 original_img = Image.open(HERO_IMG)
 w, h = original_img.size
-crop_fraction = 0.35      # << hier ändern nach Wunsch
+crop_fraction = 0.35      
 crop_height = int(h * crop_fraction)
 top = (h - crop_height) // 2
 bottom = top + crop_height
@@ -54,7 +54,7 @@ with col_left:
     with st.container(border=True):
         st.subheader("🔍 Our Guiding Questions")
 
-        # Die 5 Leitfragen (kurz & klar)
+        # 5 guiding questions
 
         st.markdown("**Quick Insights:**")
 
@@ -68,8 +68,8 @@ with col_left:
 
         with st.expander("2) What drives rising hospital costs?"):
             st.write(
-                "Costs increase mainly due to **higher staff expenses** "
-                "In the regression graph, it can be shown that as the number of nursing staff per bed increases, the costs per patient day also increase. "
+                "Costs correlate strongly with **higher staff expenses** "
+                "In the regression graph, it is shown that as the number of nursing staff per bed increases, the costs per patient day also increase. "
 
             )
 
@@ -83,8 +83,8 @@ with col_left:
 
         with st.expander("4) What impact had the 2020 global pandemic?"):
             st.write(
-                "In 2020, contrary to the trend, we are seeing a slight **increase in hospital locations**."
-                "We also have a **high acquisition rate** for medical equipment."
+                "In 2020, contrary to the trend, we are seeing a slight **increase in hospital locations**. "
+                "We also have a **high acquisition rate** for medical equipment. "
                 "The costs are in line with the upward trend."
             )
 
