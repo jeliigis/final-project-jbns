@@ -5,7 +5,7 @@ from PIL import Image
 
 
 st.subheader("About us")
-st.markdown("We are Jeremy and Jelena, economic students at UZH. As a part of a module in our bachelors degree program, we examined "
+st.markdown("We are Jeremy and Jelena, economic students at UZH. As a part of a module in our bachelors degree, we examined "
             "health data from Swiss hospitals over the last decade.")
 
 if st.button("Jeremy's GitHub"):

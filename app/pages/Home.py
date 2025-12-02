@@ -37,12 +37,15 @@ st.markdown(
 
 # Text
 
-st.title("Behind the Numbers: A Data Story About Switzerland’s Hospitals")
+st.title("Behind the Numbers: A Data Story About Swiss Hospitals")
 
-st.markdown(
-    "Switzerland’s healthcare landscape is changing — fewer hospitals, rising costs, "
-    "and significant regional differences. Our analysis explores what the data reveals "
-    "about capacity, efficiency, and the pressures shaping today’s hospital system.")
+st.subheader(
+    "Switzerland’s healthcare landscape is changing: "
+    "fewer hospitals, rising costs, "
+    "and significant regional differences. ")
+
+st.markdown("Our analysis explores what Swiss Hospital Data from over a decade reveals "
+            "about capacity, efficiency, and the pressures shaping today’s hospital system.")
 
 st.write("")  # small space
 
@@ -78,7 +81,7 @@ with col_left:
                 "The regional comparison shows clear **differences in examinations/device-rate, "
                 "and beds/staff-rate**. "
                 "We visualize that **regional differences** exist in terms of **costs per patient day"
-                "despite the same nurse-to-bed ratio**."
+                " despite the same nurse-to-bed ratio**."
             )
 
         with st.expander("4) What impact had the 2020 global pandemic?"):
@@ -95,37 +98,26 @@ with col_left:
                 "Together, these indicators may support more resource-efficient planning and capacity management."
             )
 
-
-# Box 2: Overview
+# Box: Overview
 with col_right:
     with st.container(border=True):
-        st.subheader("🧭 How to Navigate This App")
-        st.write(
-            """
-**Swiss Hospital Data**  
-Explore national trends from 2010–2023: beds, staff, occupancy, costs and regional differences.
 
-**Sample Hospital Dashboard**  
-A simulated hospital view with internal key indices: bed occupancy, staffing mix, patient composition and cost metrics.
-            """)
+        st.subheader("🧭 How to Navigate This WebApp")
 
-st.write("")  # space
+        st.markdown("""
+**Swiss Hospital Data:**
+Explore national trends from 2010–2023: beds & staff-occupancy, costs and regional differences.
+        """)
 
-# Box 3: Navigation
-with st.container(border=True):
-    st.subheader("🚀 Start Exploring")
+        if st.button("➡️ Explore Facts and Figures about Swiss Hospitals", key="btn_data"):
+            st.switch_page("pages/Facts_and_Figures.py")
 
-    col8, col9 = st.columns(2)
+        st.markdown("---")   # Trenner für optische Klarheit
 
-    with col8:
-        btn_data = st.button(
-            "➡️ Explore Facts and Figures about Swiss Hospitals")
+        st.markdown("""
+**Sample Hospital Dashboard:**
+A simulated hospital overview with internal key indices: bed occupancy, staffing mix, patient composition and cost metrics.
+        """)
 
-    with col9:
-        btn_dash = st.button("➡️ Explore Dashboard for Sample Hospital")
-
-    if btn_data:
-        st.switch_page("pages/Facts_and_Figures.py")
-
-    if btn_dash:
-        st.switch_page("pages/Dashboard_for_Sample_Hospital.py")
+        if st.button("➡️ Explore Dashboard for Sample Hospital", key="btn_dash"):
+            st.switch_page("pages/Dashboard_for_Sample_Hospital.py")
