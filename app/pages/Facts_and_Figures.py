@@ -384,8 +384,8 @@ with tab3:
     "This suggests that much of the cost variation is driven by structural and temporal differences rather than occupancy alone, indicating a need to control for these effects.")
 
     # 3) cost per beddays - nurses per bed (with two way FE)
-    st.header("Cost per Patient Day on Nurses per Bed")
-    st.subheader(
+    st.subheader("Cost per Patient Day on Nurses per Bed")
+    st.markdown(
         "Two-Way Fixed Effects: Cost per Patient Day on Nurses per Bed (Region + Year)")
 
     # generate a new dataset were we have the demeaned data to have a bit more overview
@@ -455,7 +455,7 @@ with tab3:
     "Last but not least, it is not only a question of efficiency and cost-effectiveness, but it is also important to review the working conditions of the staff when considering any cost-cutting measures.")
 
     # 4) cost_per_bed ~ nurses_per_bed - with colored regions
-    st.subheader("Linear Regression: Cost per Bed Day on Nurses per Bed")
+    st.subheader("Linear Regression: Cost per Patient Day on Nurses per Bed")
     X1 = df_health_reg[["nurses_per_bed"]]   # 2D
     y1 = df_health_reg["cost_per_bedday"]       # 1D
 
@@ -477,7 +477,7 @@ with tab3:
     st.pyplot(plt)
 
     # coloring in the years
-    st.subheader("Linear Regression: Cost per Bed Day on Nurses per Bed")
+    st.subheader("Linear Regression: Cost per Patient Day on Nurses per Bed")
     X1 = df_health_reg[["nurses_per_bed"]]   # 2D
     y1 = df_health_reg["cost_per_bedday"]       # 1D
 
