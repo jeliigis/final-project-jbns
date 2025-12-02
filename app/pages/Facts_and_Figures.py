@@ -4,7 +4,7 @@ import streamlit as st
 from pathlib import Path
 
 st.set_page_config(
-    page_title="Swiss Hospital Dashboard",
+    page_title="Swiss Hospital Data",
     page_icon="🏥",
     layout="centered"
 )
@@ -13,7 +13,7 @@ HERE = Path(__file__).resolve().parent          # = app/pages
 DATA_PATH = HERE.parent / "data" / "df_health.xlsx"  # = app/data/df_health.xlsx
 
 df_health = pd.read_excel(DATA_PATH, na_values=["x"])
-st.title("Swiss Hospital Data")
+st.title("Facts and Figures about Swiss Hospital System")
 st.write("_based on Federal Statistical Office, 2025_")
 tab1, tab2, tab3, tab4 = st.tabs(
     ["Development Visualisation", "Regional Structure Trend ", "Linear Regression", "Overview Dataset"])
@@ -24,12 +24,14 @@ tab1, tab2, tab3, tab4 = st.tabs(
 # df_health = pd.read_excel(ROOT / "data" / "df_health.xlsx")
 
 with tab1:
-    st.header("Development Visualisation")
-    st.write("Development of Swiss Hospitals captured in bar plots")
+
+    st.write(
+        "Development of the Swiss Hospital System over the last decade visually captured")
 
     # generating a bar plot for the total of hospitals trend over the years
     df_ch_hospitals = df_health[df_health["Region"] == "Schweiz"]
-    st. subheader("Hospital development in Swiss Hospitals in 2010 - 2023")
+    st. subheader(
+        "Location development of acute treatment in Swiss Hospitals in 2010 - 2023")
     df_hospitals_ch_indexed = df_ch_hospitals.set_index('Year')
     st.bar_chart(df_hospitals_ch_indexed["Amount_Hospitals_General"])
     st.caption("_x-axis = Year, y-axis = number of hospitals_")
@@ -74,7 +76,8 @@ with tab1:
                                                    "Linear_Accelerator_Device",	"Lithotriptor_Device", "MRI_Device", "Pet_Scanner_Device"]].sum(axis=1)
     df_ch_infrastructure = df_health[df_health["Region"] == "Schweiz"]
     df_ch_infrastructure = df_ch_infrastructure[df_ch_infrastructure['Year'] >= 2013]
-    st.subheader("Infrastructure development in Swiss Hospitals in 2013-2023")
+    st.subheader(
+        "Infrastructure development of acute treatment in Swiss Hospitals in 2013-2023")
     df_infrastructure_ch_indexed = df_ch_infrastructure.set_index('Year')
     st.bar_chart(df_infrastructure_ch_indexed["Infrastructure_Total"])
     st.caption("_x-axis = Year, y-axis = Number of Medical Devices_")
@@ -86,7 +89,7 @@ with tab1:
     # generating a bar plot for the total of hospital beds trend over the years
     df_ch_beds = df_health[df_health["Region"] == "Schweiz"]
     st. subheader(
-        "Hospital Beds development in Swiss Hospitals in 2010 - 2023")
+        "Hospital Beds development of acute treatment in Swiss Hospitals in 2010 - 2023")
     df_beds_ch_indexed = df_ch_beds.set_index('Year')
     st.bar_chart(df_beds_ch_indexed["Beds_Total_General"])
     st.caption("_x-axis = Year, y-axis = number of hospital beds_")
@@ -107,8 +110,9 @@ with tab1:
     # "This development has eased the burden on nursing staff, although it should be noted that individual treatments may have become more intensive as a result. ")
 
 with tab2:
-    st.subheader("Regional Structure Trend")
-    st.write("Overview of regional differences in infrastrutural and staff trend")
+
+    st.write(
+        "Overview of regional differences within Switzerland in infrastrutural and staff trend")
     # generating a line plot for the examinations per device
     column_devices = ["Angiographie_Device", "CT_Scanner_Device", "Dialyse_Device", "Gamma_Camera_Device",
                       "Linear_Accelerator_Device",	"Lithotriptor_Device", "MRI_Device", "Pet_Scanner_Device"]
@@ -129,7 +133,7 @@ with tab2:
 
     # Auswahl-UI (Standard: Schweiz)
     selection = st.multiselect(
-        "Choose region(S):", regionen, default=["Schweiz"])
+        "Choose region(s):", regionen, default=["Schweiz"])
 
     if selection:
         fig, ax = plt.subplots(figsize=(9, 6))
@@ -145,14 +149,14 @@ with tab2:
         ax.set_title("Examinations per Device - Trend by Regions")
         ax.grid(True)
         ax.legend(title="Region")
-        st.header("Examinations per Device – Trend by Regions")
+        st.subheader("Examinations per Device – Trend by Regions")
         st.pyplot(fig)
     else:
         st.info("Please choose at least one region.")
 
     # generating a bar plot for the bed/nurse development over the last decade
     # new key-number
-    st.header("Beds per Nurse - Trend by Regions")
+    st.subheader("Beds per Nurse - Trend by Regions")
     charge_nurse = "Beds per Nurse"
     df_health[charge_nurse] = df_health["Beds_Total_General"] / \
         df_health["Nurses_Amount_General"]
@@ -174,7 +178,7 @@ with tab2:
     # generating a bar plot for the bed/doc development over the last decade
     # new key humber
 
-    st.header("Beds per Doctor - Trend by Regions")
+    st.subheader("Beds per Doctor - Trend by Regions")
     charge_doc = "Beds per Doctor"
     df_health[charge_doc] = df_health["Beds_Total_General"] / \
         df_health["Doctors_Amount_General"]
@@ -235,13 +239,13 @@ with tab3:
     df_health_reg = df_health_reg.replace([np.inf, -np.inf], np.nan).dropna()
     df_health_reg = df_health_reg[df_health_reg["cost_per_bedday"] != 0]
 
-    st.title("Linear Regressions")
-    st.write("Statistical Measurement with OLS")
+    st.write(
+        "Statistical Linear Regression including Controll Mechanism for Covariats")
 
 
 # 1) cost per beddays - average occupied bed days (with two way FE)
-    st.header("Cost per Patient Day on Average occupied Bed Days")
-    st.subheader(
+    st.subheader("Cost per Patient Day on Average occupied Bed Days")
+    st.markdown(
         "Two-Way Fixed Effects: Cost per Patient Day on Average occupied Bed Days (Region + Year)")
 
     # generate a new dataset were we have the demeaned data to have a bit more overview
@@ -511,7 +515,7 @@ with tab3:
 
 with tab4:
     import matplotlib.pyplot as plt
-    st.subheader("Overview merged Dataset")
+
     st.write("For our project, we used available datasets from the Federal Statistic Office Switzerland and merged them into one main dataset. "
              "Feel free to look at the it and make use of the filter option if you are interested in specific variables, regions or years.")
 

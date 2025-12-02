@@ -13,19 +13,18 @@ st.set_page_config(
     layout="wide")
 
 # content
-st.title("Switzerland's Hospital System: Between Performance and Bottleneck")
-st.markdown(
-    "🔎 Discover a Prototype of a Swiss hospital Dashboard and the key indicators that can improve hospital planning")
-st.write("This dashboard was created to display various measurements and illustrations relating to a hospital. "
-         "The data was generated synthetically and is not intended to be interpreted in terms of content.")
-
+st.title("Sample Dashboard for a Swiss Hospital")
+st.subheader(
+    "🔎 Discover how a figurative Swiss hospitals key indices could potentially look like.")
+st.write("This dashboard was created to display various measurements and illustrations relating to a hospital. ")
+st.write("_The data was generated synthetically and is not intended to be interpreted in terms of content._")
 # BI-Diagram Dashboard
 
 HERE = Path(__file__).resolve().parent
 DATA_PATH = HERE.parent / "data" / "bi_diagramm_data.xlsx"
 
 df_sim = pd.read_excel(DATA_PATH, na_values=["x"])
-st.title("Swiss Hospital Data")
+st.title("Dashboard")
 
 # KPI Dashboard
 
@@ -687,7 +686,7 @@ with col3:
 
 with col2:
     metric_chart(
-        f"**Avg.Treat.Cost/Patient({selected_month} {selected_year}**)",
+        f"**Avg.Treat.Cost/Patient {selected_month} {selected_year}**",
         avg_treat_cost,
         delta_cost)
 
@@ -714,7 +713,7 @@ with col2:
         title=f"Bed Capacity vs. Occupancy — {selected_month} {selected_year}",
         col=col2)
 
-st.header("Yearly Overview")
+st.subheader("Yearly Overview")
 # --- 2×2 GRID FÜR DIE AREA-CHARTS ---
 
 # 1. Zeile: Staff (links) + Patients (rechts)
