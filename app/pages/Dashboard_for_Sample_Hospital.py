@@ -36,7 +36,9 @@ selected_year = st.selectbox("Select year", years, index=default_year_index)
 
 # available months
 month_options = df_sim[df_sim["Year"] == selected_year]["Month"].unique()
-selected_month = st.selectbox("Select month", month_options)
+months = sorted(df_sim["Month"].unique())
+default_month_index = len(months) - 1
+selected_month = st.selectbox("Select month", month_options, index=default_month_index)
 
 # row for the chosen month and year
 selected_row = df_sim[
