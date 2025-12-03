@@ -359,8 +359,9 @@ with tab3:
 
     plt.figure()
     for t in time:
-        subset_time = df_health_reg[df_health_reg["Year"] == t]
-        plt.scatter(subset_time["Avg_Days_Occ"],
+        if t >= 2013:
+            subset_time = df_health_reg[df_health_reg["Year"] == t]
+            plt.scatter(subset_time["Avg_Days_Occ"],
                     subset_time["cost_per_bedday"], label=t)
     plt.plot(df_health_reg["Avg_Days_Occ"],
              df_health_reg["Regression_occupancy"], label="Regression", color="red")
@@ -487,8 +488,9 @@ with tab3:
     plt.figure()
 
     for t in time:
-        subset_time = df_health_reg[df_health_reg["Year"] == t]
-        plt.scatter(subset_time["nurses_per_bed"],
+        if t >= 2013:
+            subset_time = df_health_reg[df_health_reg["Year"] == t]
+            plt.scatter(subset_time["nurses_per_bed"],
                     subset_time["cost_per_bedday"], label=t)
 
     plt.plot(df_health_reg["nurses_per_bed"],
