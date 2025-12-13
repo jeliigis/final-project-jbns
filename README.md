@@ -81,8 +81,12 @@ Following Tidy Data we cleaned up each dataset, so that:
 
 By combining year and region as one observation unit, we were able to use those columns as identifiers for merging the dataset later.
 
+To view the entire process, you can take a look at our [Jupyter Notebook](./scripts/hospital_costs_new.ipynb).
+
 <h2> Data analysis and visualization</h2>
 When analyzing and visualizing the data, we used libraries such as pyplot and scikit-learn.
 This has enabled us to choose a wide variety of analysis and visualisation approaches in order to present the key messages as precisely and concisely as possible.
+
+The files for data analysis and visualisation can be found under [pages](./pages). 
 
 
