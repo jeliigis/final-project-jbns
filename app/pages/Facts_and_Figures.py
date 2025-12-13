@@ -14,7 +14,7 @@ DATA_PATH = HERE.parent / "data" / "df_health.xlsx"  # = app/data/df_health.xlsx
 
 df_health = pd.read_excel(DATA_PATH, na_values=["x"])
 st.title("Facts and Figures about Swiss Hospital System")
-st.write("_based on Federal Statistical Office, 2025_")
+st.write("_based on Federal Statistical Office and Federal Office of Public Health, 2025_")
 tab1, tab2, tab3, tab4 = st.tabs(
     ["Development Visualisation", "Regional Structure Trend ", "Linear Regression", "Overview Dataset"])
 # st.dataframe(df_health)
@@ -518,8 +518,8 @@ with tab3:
 with tab4:
     import matplotlib.pyplot as plt
 
-    st.write("For our project, we used available datasets from the Federal Statistic Office Switzerland and merged them into one main dataset. "
-             "Feel free to look at the it and make use of the filter option if you are interested in specific variables, regions or years.")
+    st.write("For our project, we used available datasets from the Federal Statistic Office and the Federal Office of Public Health merged them into one main dataset. "
+             "Feel free to look at it and make use of the filter option if you are interested in specific variables, regions or years.")
 
     HERE = Path(__file__).resolve().parent  # path to app/pages
     DATA_PATH = HERE.parent / "data" / "df_health.xlsx"  # path to app/data/df_health

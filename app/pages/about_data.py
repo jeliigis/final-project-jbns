@@ -5,7 +5,7 @@ from pathlib import Path
 
 st.title("About the Data")
 st.markdown(
-    "For our project, we used available datasets from the Federal Statistic Office Switzerland.")
+    "For our project, we used available datasets from the Federal Statistic Office and the Federal Office of Public Health.")
 
 HERE = Path(__file__).resolve().parent  # path to app/pages
 DATA_PATH = HERE.parent / "data" / "df_health.xlsx"  # path to app/data/df_health

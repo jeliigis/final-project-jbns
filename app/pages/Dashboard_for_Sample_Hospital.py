@@ -15,7 +15,7 @@ st.set_page_config(
 # content
 st.title("Sample Dashboard for a Swiss Hospital")
 st.subheader(
-    "🔎 Discover how a figurative Swiss hospitals key indices could potentially look like.")
+    "🔎 Discover how a figurative set of key indicators for Swiss hospitals could look like.")
 st.write("This dashboard was created to display various measurements and illustrations relating to a hospital. ")
 st.write("_The data was generated synthetically and is not intended to be interpreted in terms of content._")
 # BI-Diagram Dashboard
