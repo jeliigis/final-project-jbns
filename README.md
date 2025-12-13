@@ -87,6 +87,6 @@ To view the entire process, you can take a look at our [Jupyter Notebook](./scri
 When analyzing and visualizing the data, we used libraries such as pyplot and scikit-learn.
 This has enabled us to choose a wide variety of analysis and visualisation approaches in order to present the key messages as precisely and concisely as possible.
 
-The files for data analysis and visualisation can be found [here](.app/pages). 
+The files for data analysis and visualisation can be found [here](./app/pages). 
 
 
