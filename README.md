@@ -12,6 +12,8 @@ In this project, we examined how this segment has developed and what measures co
 
 <h1 id="project-description">Project Description</h1>
 <h2> Switzerland’s healthcare landscape is changing: fewer hospitals, rising costs, and significant regional differences. </h2>
+<img src="images/readme_3.png" alt="FF" width="700"> 
+
 In the first part of our Project we explored the Swiss hospital landscape over a decade. We analysed data containing information to the infrastructure, the staff, the cost of Swiss hospitals and more.
 
 Our analysis revealed valuable insights about capacities, efficiencies and the pressures shaping today's hospital system.
@@ -36,6 +38,7 @@ In 2020, contrary to the overall trend, we are seeing a slight increase in hospi
 [Visit Facts and Figures!](https://final-project-jbns.streamlit.app/Facts_and_Figures)
 
 <h2> Discover how a figurative set of key indicators for Swiss hospitals could look like </h2>
+<img src="images/readme_4.png" alt="Dashy" width="700"> 
 <p>
 Our analysis showed that costs are influenced by infrastructure, patients, utilisation, supply and much more. Much of this cannot be saved because it is central to our healthcare system. This makes it all the more important to save where possible and not to generate unnecessary costs due to inefficiencies or other factors.
 </p>
