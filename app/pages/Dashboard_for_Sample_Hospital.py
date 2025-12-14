@@ -35,9 +35,12 @@ default_year_index = len(years) - 1  # create default
 selected_year = st.selectbox("Select year", years, index=default_year_index)
 
 # available months
-month_options = df_sim[df_sim["Year"] == selected_year]["Month"].unique()
 months = sorted(df_sim["Month"].unique())
-default_month_index = len(months) - 1
+month_order = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+month_options = df_sim.loc[df_sim["Year"] == selected_year, "Month"].unique().tolist()
+month_options = [m for m in month_order if m in month_options]
+default_month = "December"
+default_month_index = month_options.index(default_month) if default_month in month_options else 0
 selected_month = st.selectbox("Select month", month_options, index=default_month_index)
 
 # row for the chosen month and year
